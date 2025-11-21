@@ -1,0 +1,11 @@
+Here is an example of what an output might look like
+
+Eval-value: 30
+CPSC 231 LEC 01 : MO, 10:00
+CPSC 231 LEC 01 TUT 01 : TU, 10:00
+CPSC 231 LEC 02 : MO, 14:00
+CPSC 231 LEC 02 TUT 02 : MO, 8:00
+SENG 300 LEC 01 : TU, 9:30
+SENG 300 TUT 01 : MO, 8:00
+DATA 201 LEC 01 : MO, 8:00
+DATA 201 LEC 01 LAB 01 : FR, 10:00

@@ -1,6 +1,7 @@
 from src.model.event import Event
 from src.model.lecture_slot import LectureSlot
 from src.model.tutorial_slot import TutorialSlot
+from .problem_instance import ProblemInstance
 from datetime import time
 
 # Section headers from input file
@@ -459,3 +460,88 @@ def parse_partial_assignments(lines, events_by_id, lec_slot_index, tut_slot_inde
         })
 
     return partial_list
+
+# Parses entire input file
+# Returns ProblemInstance object
+def parse_problem_instance(path):
+
+    # Read all lines
+    all_lines = read_all_lines(path)
+    sections = split_into_sections(all_lines)
+
+    # Parse events
+    lec_by_id, course_list = parse_lectures(sections["Lectures:"])
+    tut_by_id, tut_list = parse_tutorials(sections["Tutorials:"])
+
+    # Merge into single 'events_by_id' dict
+    events_by_id = {}
+    events_by_id.update(lec_by_id)
+    events_by_id.update(tut_by_id)
+
+    # Parse slots
+    lec_slots_by_key, lec_slot_index = parse_lecture_slots(sections["Lecture slots:"])
+    tut_slots_by_key, tut_slot_index = parse_tutorial_slots(sections["Tutorial slots:"])
+
+    # Parse constraints
+    not_compatible_list = parse_not_compatible(
+        sections["Not compatible:"],
+        events_by_id
+    )
+
+    unwanted_list = parse_unwanted(
+        sections["Unwanted:"],
+        events_by_id,
+        lec_slot_index,
+        tut_slot_index
+    )
+
+    pref_list = parse_preferences(
+        sections["Preferences:"],
+        events_by_id,
+        lec_slot_index,
+        tut_slot_index
+    )
+
+    pair_list = parse_pair(
+        sections["Pair:"],
+        events_by_id
+    )
+
+    partial_assignments = parse_partial_assignments(
+        sections["Partial assignments:"],
+        events_by_id,
+        lec_slot_index,
+        tut_slot_index
+    )
+
+    # Problem name
+    name_list = sections["Name:"]
+    name = name_list[0] if name_list else "UnnamedProblem"
+
+    # Build and return problem instance
+    return ProblemInstance(
+        name=name,
+
+        # events
+        lec_by_id=lec_by_id,
+        tut_by_id=tut_by_id,
+        events_by_id=events_by_id,
+        course_list=course_list,
+        tut_list=tut_list,
+
+        # slots
+        lec_slots_by_key=lec_slots_by_key,
+        tut_slots_by_key=tut_slots_by_key,
+        lec_slot_index=lec_slot_index,
+        tut_slot_index=tut_slot_index,
+
+        # constraints
+        not_compatible=not_compatible_list,
+        unwanted=unwanted_list,
+        preferences=pref_list,
+        pairs=pair_list,
+        partial_assignments=partial_assignments
+    )
+
+
+

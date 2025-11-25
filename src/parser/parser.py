@@ -1,8 +1,3 @@
-from src.model.event import Event
-from src.model.lecture_slot import LectureSlot
-from src.model.tutorial_slot import TutorialSlot
-from datetime import time
-
 # Section headers from input file
 SECTION_HEADERS = [
     "Name:",

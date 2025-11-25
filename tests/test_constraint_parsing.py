@@ -1,11 +1,11 @@
 import os
-from src.parser.parser import (
-    read_all_lines,
-    split_into_sections,
-    parse_lectures,
-    parse_tutorials,
-    parse_lecture_slots,
-    parse_tutorial_slots,
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from parser.parser import read_all_lines, split_into_sections
+from parser.event import parse_lectures, parse_tutorials
+from parser.slot import parse_lecture_slots, parse_tutorial_slots
+from parser.constraint import (
     parse_not_compatible,
     parse_unwanted,
     parse_preferences,
@@ -106,23 +106,20 @@ for pa in partials:
 # Example Not Compatible (based on your input1.txt)
 check(len(not_compat) > 0, "Not Compatible list is non-empty")
 
-# Example unwanted check
+# Example unwanted check - updated for new constraint objects
 for uw in unwanted:
-    check("event_id" in uw and "slot_key" in uw, "Unwanted entry has required keys")
+    check(hasattr(uw, 'event_id') and hasattr(uw, 'slot_key'), "Unwanted entry has required attributes")
 
-# Example preferences check
+# Example preferences check - updated for new constraint objects
 for p in prefs:
-    check("event_id" in p and "slot" in p and "value" in p, "Preference entry has required keys")
+    check(hasattr(p, 'event_id') and hasattr(p, 'slot_key') and hasattr(p, 'value'), "Preference entry has required attributes")
 
-# Example pair check
+# Example pair check - updated for new constraint objects
 for pr in pairs:
-    check("event_a_id" in pr and "event_b_id" in pr, "Pair entry has required keys")
+    check(hasattr(pr, 'event_a_id') and hasattr(pr, 'event_b_id'), "Pair entry has required attributes")
 
-
-# Example partial assignment check
+# Example partial assignment check - updated for new constraint objects
 for pa in partials:
-    check("event_id" in pa and "slot" in pa, "Partial assignment has required keys")
-
-
+    check(hasattr(pa, 'event_id') and hasattr(pa, 'slot_key'), "Partial assignment has required attributes")
 
 print("\nALL CONSTRAINT TESTS PASSED SUCCESSFULLY!\n")

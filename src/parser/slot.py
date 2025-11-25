@@ -1,6 +1,6 @@
-# Slot class definitions and parsing functions for lecture and tutorial slots
+# slot class definitions and parsing functions for lecture and tutorial slots
 
-from .utils import strip_and_split, is_evening_time
+from .helpers import strip_and_split, is_evening_time
 from .constants import (
     EVENT_KIND_LECTURE, EVENT_KIND_TUTORIAL,
     VALID_LECTURE_DAYS, VALID_TUTORIAL_DAYS,

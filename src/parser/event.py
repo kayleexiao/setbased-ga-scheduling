@@ -1,6 +1,6 @@
 # Event class definition and parsing functions for lectures and tutorials
 
-from .utils import strip_and_split, parse_boolean, normalize_event_id
+from .helpers import strip_and_split, parse_boolean, normalize_event_id
 from .constants import (
     EVENT_KIND_LECTURE, TUTORIAL_TYPES, EVENING_LECTURE_PREFIX,
     COURSE_500_LEVEL, SPECIAL_COURSE_851, SPECIAL_COURSE_913
@@ -25,10 +25,22 @@ class Event:
         
         # determine if this is a lecture or tutorial
         if len(parts) == 4:
-            # this is a lecture: "CPSC 231 LEC 01"
-            self.kind = EVENT_KIND_LECTURE
-            self.section_label = f"{parts[2]} {parts[3]}"  # "LEC 01"
-            self.tutorial_label = None
+            # could be a lecture: "CPSC 231 LEC 01"
+            # OR a tutorial without LEC prefix: "SENG 300 TUT 01"
+            event_type = parts[2].upper()
+            
+            if event_type == "LEC":
+                # this is a lecture
+                self.kind = EVENT_KIND_LECTURE
+                self.section_label = f"{parts[2]} {parts[3]}"  # "LEC 01"
+                self.tutorial_label = None
+            elif event_type in TUTORIAL_TYPES:
+                # this is a tutorial/lab without LEC prefix: "SENG 300 TUT 01"
+                self.kind = event_type  # TUT or LAB
+                self.section_label = None  # no lecture section for standalone tutorials
+                self.tutorial_label = f"{parts[2]} {parts[3]}"  # "TUT 01" or "LAB 01"
+            else:
+                raise ValueError(f"Unknown event type: {parts[2]}. Expected LEC, TUT, or LAB.")
         elif len(parts) == 6:
             # this is a tutorial: "CPSC 231 LEC 01 TUT 01" or "CPSC 231 LEC 01 LAB 01"
             self.section_label = f"{parts[2]} {parts[3]}"  # "LEC 01"
@@ -45,7 +57,7 @@ class Event:
             raise ValueError(f"Invalid event identifier format: {identifier}")
         
         # check if this is an evening event (LEC 9X prefix)
-        self.is_evening_event = self.section_label.startswith(EVENING_LECTURE_PREFIX)
+        self.is_evening_event = self.section_label and self.section_label.startswith(EVENING_LECTURE_PREFIX) or False
         
         # check if this is a 500-level course
         self.is_500_course = self.course_no >= COURSE_500_LEVEL

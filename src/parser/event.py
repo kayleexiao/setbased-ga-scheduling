@@ -45,7 +45,7 @@ class Event:
             # this is a tutorial: "CPSC 231 LEC 01 TUT 01" or "CPSC 231 LEC 01 LAB 01"
             self.section_label = f"{parts[2]} {parts[3]}"  # "LEC 01"
             
-            # check if it's TUT or LAB (both treated as tutorials)
+            # check if it's TUT or LAB (but both treated as tutorials)
             tut_kind = parts[4].upper()
             if tut_kind in TUTORIAL_TYPES:
                 self.kind = tut_kind  # store actual kind (TUT or LAB)

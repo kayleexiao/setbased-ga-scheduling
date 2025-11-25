@@ -1,9 +1,3 @@
-from src.model.event import Event
-from src.model.lecture_slot import LectureSlot
-from src.model.tutorial_slot import TutorialSlot
-from .problem_instance import ProblemInstance
-from datetime import time
-
 # Section headers from input file
 SECTION_HEADERS = [
     "Name:",
@@ -545,3 +539,4 @@ def parse_problem_instance(path):
 
 
 
+       

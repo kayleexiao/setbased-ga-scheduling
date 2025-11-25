@@ -1,5 +1,8 @@
 import os
-from src.parser.parser import parse_problem_instance
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from parser.parser import parse_input_file
 
 def check(cond, msg):
     if cond:
@@ -19,7 +22,7 @@ input_path = os.path.join(project_root, "input", "input1.txt")
 
 print(f"Loading problem instance from: {input_path}\n")
 
-inst = parse_problem_instance(input_path)
+inst = parse_input_file(input_path)
 
 # PRINT EVERYTHING
 

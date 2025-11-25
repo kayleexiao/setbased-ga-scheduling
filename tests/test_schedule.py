@@ -1,30 +1,22 @@
-from src.model.event import Event
-from src.model.lecture_slot import LectureSlot
-from src.model.schedule import Schedule
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from parser.event import Event
+from parser.slot import LectureSlot
+from model.schedule import Schedule
 
 lec_slot = LectureSlot(
-    slot_key=("LEC", "MO", "09:00"),
-    kind="LEC",
     day="MO",
     start_time="09:00",
-    is_evening_slot=False,
     lecture_max=5,
     lecture_min=0,
-    al_lecture_max=2,
-    forbidden_for_lectures=False
+    al_lecture_max=2
 )
 
 event = Event(
-    id="CPSC 231 LEC 01",
-    kind="LEC",
-    program_code="CPSC",
-    course_no=231,
-    section_label="LEC 01",
-    tutorial_label=None,
-    al_required=True,
-    is_evening_event=False,
-    is_500_course=False,
-    is_special_tut=False
+    identifier="CPSC 231 LEC 01",
+    al_required=True
 )
 
 # create schedule with one assignment

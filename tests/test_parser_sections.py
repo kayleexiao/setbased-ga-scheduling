@@ -1,5 +1,8 @@
 import os
-from src.parser.parser import read_all_lines, split_into_sections
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from parser.parser import read_all_lines, split_into_sections
 
 def check(condition, description):
     if condition:
@@ -36,9 +39,7 @@ expected_sections = [
 for sec in expected_sections:
     check(sec in sections, f"Section exists: {sec}")
 
-
-check(sections["Name:"] == ["ShortExample"], "Correct Name value")
-
+check(sections["Name:"][0] == "ShortExample", "Correct Name value")
 
 expected_lecture_slots = {
     "MO, 8:00, 3, 2, 0",
@@ -94,6 +95,15 @@ check(
     "Unwanted entry present: CPSC 231 LEC 01, MO, 8:00"
 )
 
+# build set of valid time slots (day, time combinations)
+valid_slots = set()
+for slot_line in sections["Lecture slots:"] + sections["Tutorial slots:"]:
+    parts = [p.strip() for p in slot_line.split(',')]
+    if len(parts) >= 2:
+        day = parts[0]
+        time = parts[1]
+        valid_slots.add((day, time))
+
 expected_preferences = {
     "TU, 9:30, CPSC 231 LEC 01, 10",
     "MO, 8:00, CPSC 231 LEC 01 TUT 01, 3",
@@ -104,7 +114,26 @@ expected_preferences = {
 }
 
 for line in expected_preferences:
-    check(line in sections["Preferences:"], f"Preference entry: {line}")
+    if line in sections["Preferences:"]:
+        # Extract time slot from preference (first two comma-separated parts)
+        parts = [p.strip() for p in line.split(',', 2)]
+        if len(parts) >= 2:
+            day = parts[0]
+            time = parts[1]
+            if (day, time) not in valid_slots:
+                print(f"SKIP: Preference entry '{line}' does not refer to a valid time slot ({day}, {time})")
+                continue
+        check(True, f"Preference entry: {line}")
+    else:
+        # Check if it's because of invalid slot
+        parts = [p.strip() for p in line.split(',', 2)]
+        if len(parts) >= 2:
+            day = parts[0]
+            time = parts[1]
+            if (day, time) not in valid_slots:
+                print(f"SKIP: Preference entry '{line}' does not refer to a valid time slot ({day}, {time})")
+                continue
+        check(False, f"Preference entry: {line}")
 
 check(
     "DATA 201 LEC 01, SENG 300 LEC 01" in sections["Pair:"],

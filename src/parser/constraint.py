@@ -1,7 +1,6 @@
 # Constraint class definitions and parsing functions.
 
-from .utils import strip_and_split, normalize_event_id
-from .constants import EVENT_KIND_LECTURE, EVENT_KIND_TUTORIAL
+from .helpers import strip_and_split, normalize_event_id
 
 # represents a constraint that two events cannot be scheduled at overlapping times
 class NotCompatible:

@@ -1,542 +1,271 @@
-# Section headers from input file
-SECTION_HEADERS = [
-    "Name:",
-    "Lecture slots:",
-    "Tutorial slots:",
-    "Lectures:",
-    "Tutorials:",
-    "Not compatible:",
-    "Unwanted:",
-    "Preferences:",
-    "Pair:",
-    "Partial assignments:",
-]
+# Main parser module for reading and parsing the input file
 
-# Reads raw input and returns a list of strings
-# Each string is one line from the file
-def read_all_lines(path: str) -> list[str]:
-    with open(path, "r") as f:
-        # Strip whitespace and newline characters from each line
-        return [line.strip() for line in f.readlines()]
+from .constants import SECTION_HEADERS
+from .helpers import is_empty_line
+from .event import Event, parse_lectures, parse_tutorials
+from .slot import parse_lecture_slots, parse_tutorial_slots
+from .constraint import (
+    NotCompatible,
+    parse_not_compatible, parse_unwanted, parse_preferences,
+    parse_pair, parse_partial_assignments
+)
+from .problem_instance import ProblemInstance
 
+# function to read all lines from the input file
+# returns a list of strings (lines)
+def read_all_lines(filepath):
+    try:
+        with open(filepath, 'r') as f:
+            return f.readlines()
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Input file not found: {filepath}")
+    except Exception as e:
+        raise Exception(f"Error reading file {filepath}: {e}")
 
-# Takes list produced by read_all_lines() and divides it into a
-# dictionary of sections.
-def split_into_sections(lines: list[str]) -> dict[str, list[str]]:
-    # Final output dictionary
-    sections = {} 
-    # Keeps track of what section we are in
-    current_header = None
-    # Collects lines in current section
-    buffer = []
-
-    # Main loop
-    for line in lines:
-
-        if line in SECTION_HEADERS:
-
-            if current_header is not None:
-                sections[current_header] = buffer
-
-            # Init new section
-            current_header = line
-            # Prepare buffer
-            buffer = []
-
-        else:
-            # Collect all lines in current section
-            if current_header is not None and line != "":
-                buffer.append(line)
+# function to split lines into sections based on headers
+# returns a dictionary mapping section header to list of lines in that section
+def split_into_sections(all_lines):
+    sections = {
+        "Name:": [],
+        "Lecture slots:": [],
+        "Tutorial slots:": [],
+        "Lectures:": [],
+        "Tutorials:": [],
+        "Not compatible:": [],
+        "Unwanted:": [],
+        "Preferences:": [],
+        "Pair:": [],
+        "Partial assignments:": []
+    }
     
-    # Save last buffered section
-    if current_header is not None:
-        sections[current_header] = buffer
+    current_section = None
+    
+    for line in all_lines:
+        # check if this line is a section header
+        stripped = line.strip()
+        
+        if stripped in sections.keys():
+            current_section = stripped
+        elif current_section is not None and not is_empty_line(line):
+            # add non-empty lines to the current section (stripped)
+            sections[current_section].append(stripped)
     
     return sections
 
-# Helper to convert lower case in input to python bool
-def parse_bool(text: str) -> bool:
-    t = text.strip().lower()
-
-    if t == "true":
-        return True
-    if t == "false":
-        return False
+# main function to parse the entire input file and create a ProblemInstance
+# returns a ProblemInstance object
+def parse_input_file(filepath, pen_lecturemin=1, pen_tutorialmin=1,
+                     pen_notpaired=1, pen_section=1,
+                     w_minfilled=1, w_pref=1, w_pair=1, w_secdiff=1):
+    # step 1: read all lines from file
+    all_lines = read_all_lines(filepath)
     
-# Parse one lecture definition line
-def parse_lecture_line(line: str) -> Event:
-
-    # Split identifier from bool
-    left, al_flag_text = line.split(",")
-    al_required = parse_bool(al_flag_text)
-
-    # Split up parts
-    parts = left.strip().split()
-
-    # Assign parts
-    # The list looks like this for indexing:
-    # [CPSC, 231, LEC, 01]
-    program_code = parts[0]
-    course_no = int(parts[1])
-    kind = parts[2] # This should always be "LEC" but have this here anyways
-    section_num = parts[3]
-    section_label = f"{kind} {section_num}"
-
-    # Evening condition
-    is_evening_event = section_num.startswith("9")
-
-    # 500 level condition
-    is_500_course = (course_no >= 500)
-
-    if (program_code == "CPSC") and course_no in (851, 913):
-        is_special_tut = True
-    else:
-        is_special_tut = False
-
-    event_id = f"{program_code} {course_no} {kind} {section_num}"
-
-    # Construct event object
-    return Event(
-        id=event_id,
-        kind=kind,
-        program_code=program_code,
-        course_no=course_no,
-        section_label=section_label,
-        tutorial_label=None,
-        al_required=al_required,
-        is_evening_event=is_evening_event,
-        is_500_course=is_500_course,
-        is_special_tut=is_special_tut,
-    )
-
-def parse_tutorial_line(line: str) -> Event:
-    
-    # Split identifier from bool
-    left, al_flag_text = line.split(",")
-    al_required = parse_bool(al_flag_text)
-
-    # Split up parts
-    parts = left.strip().split()
-
-    # Assign parts
-    program_code = parts[0]
-    course_no = int(parts[1])
-
-    # Special case - tutorial without lecture prefix
-    # [SENG 300 TUT 01]
-    if parts[2] in ("TUT", "LAB"):
-        kind = parts[2]
-        tut_num = parts[3]
-        section_num = tut_num
-        tutorial_label = f"{kind} {tut_num}"
-
-        # This is a bit sketchy and needs clarification
-        section_label = f"LEC {tut_num}"
-
-        event_id = f"{program_code} {course_no} {tutorial_label}"
-
-    # [CPSC, 231, LEC, 01, TUT, 01]
-    else:
-
-        lec_prefix = parts[2]
-        section_num = parts[3]
-        kind = parts[4]
-        section_label = f"{kind} {section_num}"
-        tut_num = parts[5]
-        tutorial_label = f"{kind} {tut_num}"
-
-        event_id = f"{program_code} {course_no} {lec_prefix} {section_num} {kind} {tut_num}"
-
-
-    # Evening condition
-    is_evening_event = section_num.startswith("9")
-
-    # 500 level condition
-    is_500_course = (course_no >= 500)
-
-    if (program_code == "CPSC") and course_no in(851, 913):
-        is_special_tut = True
-    else:
-        is_special_tut = False
-
-    # Construct event object
-    return Event(
-        id=event_id,
-        kind=kind,
-        program_code=program_code,
-        course_no=course_no,
-        section_label=section_label,
-        tutorial_label=tutorial_label,
-        al_required=al_required,
-        is_evening_event=is_evening_event,
-        is_500_course=is_500_course,
-        is_special_tut=is_special_tut,
-    )
-
-
-# Given lines under lecture return:
-# lec_by_id
-# course_list
-def parse_lectures(lines):
-
-    lec_by_id = {}
-    course_list = {}
-
-    for line in lines:
-        event = parse_lecture_line(line)
-        lec_by_id[event.id] = event
-
-        key = (event.program_code, event.course_no)
-        course_list.setdefault(key, []).append(event.id)
-
-    return lec_by_id, course_list
-
-# Given lines under tutorial return:
-# tut_by_id
-# tut_list
-def parse_tutorials(lines):
-
-    tut_by_id = {}
-    tut_list = {}
-
-    for line in lines:
-        event = parse_tutorial_line(line)
-        tut_by_id[event.id] = event
-
-        key = (event.program_code, event.course_no)
-        tut_list.setdefault(key, []).append(event.id)
-
-    return tut_by_id, tut_list
-
-# Parse all lecture slots and make:
-# lec_slots_by_key
-# lec_slot_index
-def parse_lecture_slots(lines):
-    lec_slots_by_key = {}
-    lec_slot_index = {}
-
-    forbidden_day = "TU"
-    forbidden_start = time(11,0)
-    forbidden_end = time(12, 30)
-
-    for line in lines:
-
-        # MO, 8:00, 3, 2, 0
-        parts = [p.strip() for p in line.split(",")]
-
-        day = parts[0]
-        start_time = parts[1]
-
-        hour, minute = map(int, start_time.split(":"))
-        start_time_obj = time(hour, minute)
-
-        lecture_max = int(parts[2])
-        lecture_min = int(parts[3])
-        al_lecture_max = int(parts[4])
-
-        is_evening_slot = (hour >= 18)
-
-        forbidden_for_lectures = (
-            day == "TU" and 
-            forbidden_start <= start_time_obj <= forbidden_end
-        )
-
-        slot_key = ("LEC", day, start_time)
-
-        lec_slot_obj = LectureSlot(
-            slot_key=slot_key,
-            kind="LEC",
-            day=day,
-            start_time=start_time,
-            is_evening_slot=is_evening_slot,
-            lecture_max=lecture_max,
-            lecture_min=lecture_min,
-            al_lecture_max=al_lecture_max,
-            forbidden_for_lectures=forbidden_for_lectures
-        )
-
-        lec_slots_by_key[slot_key] = lec_slot_obj
-        lec_slot_index[(day, start_time)] = slot_key
-
-    return lec_slots_by_key, lec_slot_index
-
-# Parse all lecture slots and make:
-# tut_slots_by_key
-# tut_slot_index
-def parse_tutorial_slots(lines):
-
-    tut_slots_by_key = {}
-    tut_slot_index = {}
-
-    for line in lines:
-
-        # MO, 8:00, 3, 2, 0
-        parts = [p.strip() for p in line.split(",")]
-
-        day = parts[0]
-        start_time = parts[1]
-
-        hour = int(start_time.split(":")[0])
-        is_evening_slot = (hour >= 18)
-
-        tutorial_max = int(parts[2])
-        tutorial_min = int(parts[3])
-        al_tutorial_max = int(parts[4])
-
-        is_tth_18_19_tutorial = (day in ("TU", "TH") and start_time == "18:00")
-
-        slot_key = ("TUT", day, start_time)
-
-        tut_slot_obj = TutorialSlot(
-            slot_key=slot_key,
-            kind="TUT",
-            day=day,
-            start_time=start_time,
-            is_evening_slot=is_evening_slot,
-            tutorial_max=tutorial_max,
-            tutorial_min=tutorial_min,
-            al_tutorial_max=al_tutorial_max,
-            is_tth_18_19_tutorial=is_tth_18_19_tutorial
-        )
-
-        tut_slots_by_key[slot_key] = tut_slot_obj
-        tut_slot_index[(day, start_time)] = slot_key
-
-    return tut_slots_by_key, tut_slot_index
-
-# Parse non compatible constraints
-# Returns list of dicts {event_a_id: "event a", event_b_id: "event b"}
-def parse_not_compatible(lines, events_by_id):
-    
-    not_compatible_list = []
-
-    for line in lines:
-        if not line.strip():
-            continue
-         
-        parts = [p.strip() for p in line.split(",")]
-        event_a_id, event_b_id = parts
-
-        if event_a_id not in events_by_id:
-            raise ValueError(f"Unknown event in 'Not Compatible:' {event_a_id}")
-        if event_b_id not in events_by_id:
-            raise ValueError(f"Unknown event in 'Not Compatible:' {event_b_id}")
-         
-        not_compatible_list.append({
-            "event_a_id": event_a_id,
-            "event_b_id": event_b_id
-        })
-
-    return not_compatible_list
-
-# Parse unwanted time constraints 
-# Returns list of dicts {event_id, slot_key}
-def parse_unwanted(lines, events_by_id, lec_slot_index, tut_slot_index):
-
-    unwanted_list = []
-
-    for line in lines:
-        if not line.strip():
-            continue
-
-        parts = [p.strip() for p in line.split(",")]
-        event_id, day, start_time = parts
-
-        if event_id not in events_by_id:
-            raise ValueError(f"Unknown event in 'Unwanted:' {event_id}")
-        
-        event_obj = events_by_id[event_id]
-
-        if event_obj.kind == "LEC":
-            key = lec_slot_index.get((day, start_time))
-        else:
-            key = tut_slot_index.get((day, start_time))
-
-        if key is None:
-            raise ValueError(f"Invalid slot in 'Unwanted:' {day} {start_time}")
-        
-        unwanted_list.append({
-            "event_id": event_id,
-            "slot_key": key
-        })
-
-    return unwanted_list
-
-# Parse preferences
-# Return list of preferences
-def parse_preferences(lines, events_by_id, lec_slot_index, tut_slot_index):
-
-    pref_list = []
-
-    for line in lines:
-        if not line.strip():
-            continue
-
-        parts = [p.strip() for p in line.split(",")]
-        day, start_time, event_id, value_str = parts
-
-        if event_id not in events_by_id:
-            #raise ValueError(f"Unknown event in 'Preferences:' {event_id}")
-            print(f"WARNING: Preference references unknown event: {event_id}, skipping line.")
-            continue
-        
-        event_obj = events_by_id[event_id]
-        value = int(value_str)
-
-        if event_obj.kind == "LEC":
-            key = lec_slot_index.get((day, start_time))
-        else:
-            key = tut_slot_index.get((day, start_time))
-
-        if key is None:
-            raise ValueError(f"Invalid slot in 'Preferences:' {day} {start_time}")
-
-        pref_list.append({
-            "event_id": event_id,
-            "slot": key,
-            "value": value
-        })
-
-    return pref_list
-
-# Parse pair constraints
-def parse_pair(lines, events_by_id):
-
-    pairs_list = []
-
-    for line in lines:
-        if not line.strip():
-            continue
-
-        parts = [p.strip() for p in line.split(",")]
-        event_a_id, event_b_id = parts
-
-        if event_a_id not in events_by_id:
-            raise ValueError(f"Unknown event in Pair: {event_a_id}")
-        if event_b_id not in events_by_id:
-            raise ValueError(f"Unknown event in Pair: {event_b_id}")
-        
-        pairs_list.append({
-            "event_a_id": event_a_id,
-            "event_b_id": event_b_id
-        })
-
-    return pairs_list
-
-# Parse partial assignments
-def parse_partial_assignments(lines, events_by_id, lec_slot_index, tut_slot_index):
-
-    partial_list = []
-
-    for line in lines:
-        if not line.strip():
-            continue
-
-        parts = [p.strip() for p in line.split(",")]
-        event_id, day, start_time = parts
-
-        if event_id not in events_by_id:
-            raise ValueError(f"Unknown event in 'Partial assignments:' {event_id}")
-        
-        event_obj = events_by_id[event_id]
-
-        if event_obj.kind == "LEC":
-            key = lec_slot_index.get((day, start_time))
-        else:
-            key = tut_slot_index.get((day, start_time))
-
-        if key is None:
-            raise ValueError(f"Invalid slot in 'Partial assignments:' {day} {start_time}")
-        
-        partial_list.append({
-            "event_id": event_id,
-            "slot": key
-        })
-
-    return partial_list
-
-# Parses entire input file
-# Returns ProblemInstance object
-def parse_problem_instance(path):
-
-    # Read all lines
-    all_lines = read_all_lines(path)
+    # step 2: split into sections
     sections = split_into_sections(all_lines)
-
-    # Parse events
-    lec_by_id, course_list = parse_lectures(sections["Lectures:"])
-    tut_by_id, tut_list = parse_tutorials(sections["Tutorials:"])
-
-    # Merge into single 'events_by_id' dict
-    events_by_id = {}
-    events_by_id.update(lec_by_id)
-    events_by_id.update(tut_by_id)
-
-    # Parse slots
-    lec_slots_by_key, lec_slot_index = parse_lecture_slots(sections["Lecture slots:"])
-    tut_slots_by_key, tut_slot_index = parse_tutorial_slots(sections["Tutorial slots:"])
-
-    # Parse constraints
-    not_compatible_list = parse_not_compatible(
+    
+    # step 3: create problem instance
+    problem = ProblemInstance()
+    
+    # parse name
+    if sections["Name:"]:
+        problem.name = sections["Name:"][0].strip()
+    else:
+        problem.name = "Unnamed Problem"
+    
+    # step 4: parse slots first (needed for other parsing)
+    print("Parsing lecture slots...")
+    problem.lec_slots_by_key, problem.lec_slot_index = parse_lecture_slots(
+        sections["Lecture slots:"]
+    )
+    
+    print("Parsing tutorial slots...")
+    problem.tut_slots_by_key, problem.tut_slot_index = parse_tutorial_slots(
+        sections["Tutorial slots:"]
+    )
+    
+    # step 5: parse events
+    print("Parsing lectures...")
+    problem.lec_by_id, problem.course_list = parse_lectures(
+        sections["Lectures:"]
+    )
+    
+    print("Parsing tutorials...")
+    problem.tut_by_id, problem.tut_list = parse_tutorials(
+        sections["Tutorials:"]
+    )
+    
+    # merge lecture and tutorial dictionaries into events_by_id
+    problem.events_by_id = {**problem.lec_by_id, **problem.tut_by_id}
+    
+    # step 6: handle special courses (CPSC 851 and 913)
+    handle_special_courses(problem)
+    
+    # step 7: parse constraints
+    print("Parsing constraints...")
+    
+    problem.not_compatible = parse_not_compatible(
         sections["Not compatible:"],
-        events_by_id
+        problem.events_by_id
     )
-
-    unwanted_list = parse_unwanted(
+    
+    problem.unwanted = parse_unwanted(
         sections["Unwanted:"],
-        events_by_id,
-        lec_slot_index,
-        tut_slot_index
+        problem.events_by_id,
+        problem.lec_slot_index,
+        problem.tut_slot_index
     )
-
-    pref_list = parse_preferences(
+    
+    problem.preferences = parse_preferences(
         sections["Preferences:"],
-        events_by_id,
-        lec_slot_index,
-        tut_slot_index
+        problem.events_by_id,
+        problem.lec_slot_index,
+        problem.tut_slot_index
     )
-
-    pair_list = parse_pair(
+    
+    problem.pairs = parse_pair(
         sections["Pair:"],
-        events_by_id
+        problem.events_by_id
     )
-
-    partial_assignments = parse_partial_assignments(
+    
+    problem.partial_assignments = parse_partial_assignments(
         sections["Partial assignments:"],
-        events_by_id,
-        lec_slot_index,
-        tut_slot_index
+        problem.events_by_id,
+        problem.lec_slot_index,
+        problem.tut_slot_index
     )
+    
+    # step 8: set penalties and weights
+    problem.set_penalties(pen_lecturemin, pen_tutorialmin, pen_notpaired, pen_section)
+    problem.set_weights(w_minfilled, w_pref, w_pair, w_secdiff)
+    
+    # step 9: validate partial assignments
+    validate_partial_assignments(problem)
+    
+    print(f"Parsing complete: {problem}")
+    return problem
 
-    # Problem name
-    name_list = sections["Name:"]
-    name = name_list[0] if name_list else "UnnamedProblem"
+# *********** DOUBLE CHECK THIS (make sure this is what the spec meant)
+# function to handle special courses CPSC 851 and CPSC 913
+    # - if CPSC 351 lectures exist, CPSC 851 must be scheduled
+    # - if CPSC 413 lectures exist, CPSC 913 must be scheduled
+    # - scheduled in tutorial slots at Tu/Th 18:00-19:00
+def handle_special_courses(problem):
+    from .event import Event
+    from .constraint import NotCompatible
+    
+    # check if CPSC 351 exists
+    cpsc_351_lectures = problem.get_lectures_for_course("CPSC", 351)
+    if cpsc_351_lectures:
+        # create CPSC 851 if it doesn't exist
+        cpsc_851_id = "CPSC 851 LEC 01"
+        if cpsc_851_id not in problem.events_by_id:
+            print(f"Adding special course: {cpsc_851_id}")
+            event_851 = Event(cpsc_851_id, al_required=False)
+            event_851.is_special_tut = True
+            problem.tut_by_id[cpsc_851_id] = event_851
+            problem.events_by_id[cpsc_851_id] = event_851
+            
+            # add to tut_list
+            course_key = (event_851.program_code, event_851.course_no)
+            if course_key not in problem.tut_list:
+                problem.tut_list[course_key] = []
+            problem.tut_list[course_key].append(cpsc_851_id)
+        
+        # add not compatible constraints between CPSC 851 and all CPSC 351 sections
+        for cpsc_351_id in cpsc_351_lectures:
+            problem.not_compatible.append(NotCompatible(cpsc_851_id, cpsc_351_id))
+        
+        # also add not compatible for CPSC 351 tutorials
+        cpsc_351_tutorials = problem.get_tutorials_for_course("CPSC", 351)
+        for cpsc_351_tut_id in cpsc_351_tutorials:
+            problem.not_compatible.append(NotCompatible(cpsc_851_id, cpsc_351_tut_id))
+    
+    # check if CPSC 413 exists
+    cpsc_413_lectures = problem.get_lectures_for_course("CPSC", 413)
+    if cpsc_413_lectures:
+        # create CPSC 913 if it doesn't exist
+        cpsc_913_id = "CPSC 913 LEC 01"
+        if cpsc_913_id not in problem.events_by_id:
+            print(f"Adding special course: {cpsc_913_id}")
+            event_913 = Event(cpsc_913_id, al_required=False)
+            event_913.is_special_tut = True
+            problem.tut_by_id[cpsc_913_id] = event_913
+            problem.events_by_id[cpsc_913_id] = event_913
+            
+            # add to tut_list
+            course_key = (event_913.program_code, event_913.course_no)
+            if course_key not in problem.tut_list:
+                problem.tut_list[course_key] = []
+            problem.tut_list[course_key].append(cpsc_913_id)
+        
+        # add not compatible constraints between CPSC 913 and all CPSC 413 sections
+        for cpsc_413_id in cpsc_413_lectures:
+            problem.not_compatible.append(NotCompatible(cpsc_913_id, cpsc_413_id))
+        
+        # also add not compatible for CPSC 413 tutorials
+        cpsc_413_tutorials = problem.get_tutorials_for_course("CPSC", 413)
+        for cpsc_413_tut_id in cpsc_413_tutorials:
+            problem.not_compatible.append(NotCompatible(cpsc_913_id, cpsc_413_tut_id))
 
-    # Build and return problem instance
-    return ProblemInstance(
-        name=name,
+# function to validate partial assignments are satisfiable
+# i.e., lecture assigned to lecture slot, tutorial to tutorial slot
+def validate_partial_assignments(problem):
+    for pa in problem.partial_assignments:
+        event = problem.get_event(pa.event_id)
+        slot = problem.get_slot(pa.slot_key)
+        
+        if event is None:
+            raise ValueError(f"Partial assignment references unknown event: {pa.event_id}")
+        
+        if slot is None:
+            raise ValueError(f"Partial assignment references unknown slot: {pa.slot_key}")
+        
+        # check that lecture is assigned to lecture slot
+        if event.is_lecture() and slot.kind != "LEC":
+            raise ValueError(
+                f"Partial assignment error: Lecture {pa.event_id} assigned to tutorial slot {pa.slot_key}"
+            )
+        
+        # check that tutorial is assigned to tutorial slot
+        if event.is_tutorial() and slot.kind != "TUT":
+            raise ValueError(
+                f"Partial assignment error: Tutorial {pa.event_id} assigned to lecture slot {pa.slot_key}"
+            )
+            
+    print(f"Validated {len(problem.partial_assignments)} partial assignments")
 
-        # events
-        lec_by_id=lec_by_id,
-        tut_by_id=tut_by_id,
-        events_by_id=events_by_id,
-        course_list=course_list,
-        tut_list=tut_list,
-
-        # slots
-        lec_slots_by_key=lec_slots_by_key,
-        tut_slots_by_key=tut_slots_by_key,
-        lec_slot_index=lec_slot_index,
-        tut_slot_index=tut_slot_index,
-
-        # constraints
-        not_compatible=not_compatible_list,
-        unwanted=unwanted_list,
-        preferences=pref_list,
-        pairs=pair_list,
-        partial_assignments=partial_assignments
+# function to parse preference constraints from lines
+# returns a list of Preference objects
+def parse_from_command_line(args):
+    """
+    Expected format:
+    python main.py <input_file> <w_minfilled> <w_pref> <w_pair> <w_secdiff>
+                   <pen_lecturemin> <pen_tutorialmin> <pen_notpaired> <pen_section>
+    """
+    if len(args) < 9:
+        raise ValueError(
+            "Usage: <input_file> <w_minfilled> <w_pref> <w_pair> <w_secdiff> "
+            "<pen_lecturemin> <pen_tutorialmin> <pen_notpaired> <pen_section>"
+        )
+    
+    filepath = args[0]
+    w_minfilled = int(args[1])
+    w_pref = int(args[2])
+    w_pair = int(args[3])
+    w_secdiff = int(args[4])
+    pen_lecturemin = int(args[5])
+    pen_tutorialmin = int(args[6])
+    pen_notpaired = int(args[7])
+    pen_section = int(args[8])
+    
+    return parse_input_file(
+        filepath,
+        pen_lecturemin=pen_lecturemin,
+        pen_tutorialmin=pen_tutorialmin,
+        pen_notpaired=pen_notpaired,
+        pen_section=pen_section,
+        w_minfilled=w_minfilled,
+        w_pref=w_pref,
+        w_pair=w_pair,
+        w_secdiff=w_secdiff
     )
-
-
-
-       

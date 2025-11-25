@@ -1,10 +1,9 @@
 import os
-from src.parser.parser import (
-    read_all_lines,
-    split_into_sections,
-    parse_lecture_slots,
-    parse_tutorial_slots
-)
+import sys
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from parser.parser import read_all_lines, split_into_sections
+from parser.slot import parse_lecture_slots, parse_tutorial_slots
 
 def check(cond, msg):
     if cond:

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict
 from .event import Event
-from .slot import Slot
+from ..parser.slot import Slot
 
 @dataclass
 class Schedule:

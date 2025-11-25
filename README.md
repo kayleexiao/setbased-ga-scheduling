@@ -28,4 +28,4 @@ tests/      # small local tests for parser, eval, search components, etc.
 - `feature/control-main`: search rules, schedule generation, and set-based search control logic
 - `feature/output-main`: printing final schedules in required format
 
-When working under these branches, create sub-branches, e.g., `feature/parser-main/xxx-xxx`.
+When working under these branches, create sub-branches, e.g., `feature/parser/xxx-xxx`.

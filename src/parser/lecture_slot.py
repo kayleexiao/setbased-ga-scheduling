@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from .slot import Slot
+from ..parser.slot import Slot
 
 @dataclass
 class LectureSlot(Slot):

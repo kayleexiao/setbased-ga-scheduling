@@ -12,6 +12,7 @@ from parser.parser import parse_input_file
 from model.schedule import Schedule
 from parser.event import Event
 from eval.eval import eval, eval_pref, eval_pair, eval_minfilled, eval_secdiff
+from eval.hard_constraints import Valid
 
 # test on input1.txt
 def test_eval(input_file="input/input1.txt"):
@@ -40,7 +41,10 @@ def test_eval(input_file="input/input1.txt"):
         # pref = 3
 
         eval_value = eval(schedule, problem)
-        print(eval_value)
+        print("SOFT constraint value:", eval_value)
+
+        hard_value = Valid(schedule, problem)
+        print("HARD constraint value:", hard_value)
 
     except Exception: 
         print("Error")

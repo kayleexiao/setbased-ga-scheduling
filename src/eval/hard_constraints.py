@@ -21,7 +21,7 @@ from parser.problem_instance import ProblemInstance
 PEN_HARD = 1
 
 
-SlotKey = Typle[str, str, str]
+SlotKey = Tuple[str, str, str]
 
 # -----------------
 # LOW LEVEL HELPERS (currently just stubs rn)

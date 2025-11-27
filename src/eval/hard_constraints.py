@@ -37,14 +37,26 @@ def _iter_assignments(schedule: Schedule):
 
 def _events_in_slot(schedule: Schedule, slot_key: SlotKey):
     """
-    return a list of Event objects that are assigned to the given slot_key.
+    Returns all events assigned to a given slot
 
-    slot_key: a 3-tuple (kind, day, start_time), e.g. ('LEC', 'MO', '8:00')
+    Example:
+        slot_key = ('LEC', 'MO', '8:00')
 
-    NOTE: For now this is a stub that returns an empty list.
+        If the schedule has:
+            CPSC 231 LEC -> ('LEC', 'MO', '8:00')
+            CPSC 331 LEC -> ('LEC', 'MO', '8:00')
+
+        This function returns:
+            [CPSC 231 LEC, CPSC 331 LEC]
+
     """
-    # TODO (Step 2): implement this by scanning schedule.assignments
-    return []
+    events = []
+
+    for event, slot in _iter_assignments(schedule):
+        if slot.slot_key == slot_key:
+            events.append(event)
+
+    return events
 
 
 # ---------------------------------------------------------------------------
@@ -54,15 +66,48 @@ def _events_in_slot(schedule: Schedule, slot_key: SlotKey):
 
 def _check_capacity(schedule: Schedule, problem: ProblemInstance) -> int:
     """
-    Check lecture/tutorial and Active Learning capacity constraints. (No too many classes in one slot)
+    Check lecture/tutorial AND Active Learning capacity constraints. (Not too many classes in one slot)
+    - aka lecture_max, tutorial_max, al_lecture_max and al_tutorial_max
 
-    for now, this is a stub that returns 0.
-    in later steps, this will enforce:
-        - lecture_max / tutorial_max
-        - al_lecture_max / al_tutorial_max
+    Returns how many hard constraint violations occured
     """
-    # TODO: implement
-    return 0
+    penalty = 0
+
+    # lecture slot capacity
+    for slot_key, slot in problem.lec_slots_by_key.items():
+
+        events_here = _events_in_slot(schedule, slot_key)
+
+        # checks how many lectures are in this slot
+        total_lectures = sum(1 for e in events_here if e.is_lecture())
+
+        # how many require active learning
+        al_lectures = sum(1 for e in events_here if e.is_lecture() and e.al_required)
+
+        # actual capacity check
+        if total_lectures > slot.lecture_max:
+            penalty += PEN_HARD * (total_lectures - slot.lecture_max)
+
+        # capacity check for AL
+        if al_lectures > slot.al_lecture_max:
+            penalty += PEN_HARD * (al_lectures - slot.al_lecture_max)
+
+    # tutorial slot capcity
+    for slot_key, slot in problem.tut_slots_by_key.items():
+
+        events_here = _events_in_slot(schedule, slot_key)
+
+        total_tutorials = sum(1 for e in events_here if e.is_tutorial())
+
+        al_tutorials = sum(1 for e in events_here if e.is_tutorial() and e.al_required)
+
+        if total_tutorials > slot.tutorial_max:
+            penalty += PEN_HARD * (total_tutorials - slot.tutorial_max)
+
+        if al_tutorials > slot.al_tutorial_max:
+            penalty += PEN_HARD * (al_tutorials - slot.al_tutorial_max)
+
+    return penalty
 
 
 def _check_not_compatible(schedule: Schedule, problem: ProblemInstance) -> int:

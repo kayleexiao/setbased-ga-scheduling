@@ -12,10 +12,10 @@ from parser.parser import parse_input_file
 from model.schedule import Schedule
 from parser.event import Event
 from eval.eval import eval, eval_pref, eval_pair, eval_minfilled, eval_secdiff
-from eval.hard_constraints import Valid
+from eval.hard_constraints import Valid, _check_5xx_lecures, _check_tutorials_section_diff_from_lecture
 
 # test on input1.txt
-def test_eval(input_file="input/input1.txt"):
+def test_eval(input_file="input/input3.txt"):
 
     try:
         # parse the input1.txt file -> create problem instance
@@ -46,6 +46,9 @@ def test_eval(input_file="input/input1.txt"):
         hard_value = Valid(schedule, problem)
         print("HARD constraint value:", hard_value)
 
+       # _check_5xx_lecures(schedule, problem)
+        #_check_tutorials_section_diff_from_lecture(schedule, problem)
+
     except Exception: 
         print("Error")
         traceback.print_exc()
@@ -69,6 +72,15 @@ def create_schedule(problem):
 
     # only penalties should be penalty_secdiff for CPSC 231 LEC 01/02 being in same slot and penalty_minfilled for MO 9:00
     # penalty = 30
+
+    # testing 500 level lectures -> return a penalty as there are in the same slot
+    schedule.assign(problem.lec_by_id["CPSC 501 LEC 01"], problem.lec_slots_by_key[("LEC", "MO", "8:00")])
+    schedule.assign(problem.lec_by_id["CPSC 502 LEC 02"], problem.lec_slots_by_key[("LEC", "MO", "8:00")])
+    schedule.assign(problem.lec_by_id["CPSC 523 LEC 01"], problem.lec_slots_by_key[("LEC", "MO", "8:00")])
+
+    # CPSC 231 LEC 01 has tutorial at the same time -> violating hard constraint to be in same slot
+    schedule.assign(problem.tut_by_id["CPSC 231 LEC 01 TUT 02"], problem.tut_slots_by_key[("TUT", "TU", "9:30")])
+
     return schedule
 
 if __name__ == "__main__":

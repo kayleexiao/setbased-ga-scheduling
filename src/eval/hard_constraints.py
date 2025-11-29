@@ -156,10 +156,10 @@ def _check_5xx_lecures(schedule: Schedule, problem: ProblemInstance) -> int:
 
     for assign in schedule.assignments:
         # isolating lecture number in each assignment and adding to lecture5XX_by_slot_key
-        assign_string = str(assign).split()[1]
-        course_num = int(assign_string)
+        #assign_string = str(assign).split()[1]
+        #course_num = int(assign_string)
 
-        if course_num >= 500:
+        if assign.is_500_course:
             slot_key = schedule.get_assignment(assign)
             lecture5xx_by_slot_key[slot_key] = lecture5xx_by_slot_key.get(slot_key, 0) + 1
 
@@ -282,8 +282,101 @@ def _check_evening_rules(schedule: Schedule, problem: ProblemInstance) -> int:
 
     For now, this is a stub that returns 0.
     """
-    # TODO: implement in later step
-    return 0
+    penalty = 0
+    
+    # need to check all lectures with "LEC 9" prefix
+    # e.g. "CPSC 451 LEC 91 TUT 91"
+    for assign in schedule.assignments:
+        # parser checks if lecture is an evening event
+        if assign.is_evening_event:
+            slot_key = schedule.get_assignment(assign)
+
+            # checks if slot is evening time
+            if not slot_key.is_evening_slot:
+                penalty += PEN_HARD
+
+    # checks if CPSC 851 or CPSC 913 is in appropriate slots
+    # and overlaps with any CPSC 351 or CPSC 413
+    for assign in schedule.assignments:
+        if assign.is_special_tut:
+
+            parts = str(assign).split()
+            course, code = parts[0], parts[1]
+
+            # CPSC 851
+            if f"{course} {code}" == "CPSC 851":
+                slot_key = schedule.get_assignment(assign)
+
+                # needs to be TU, 18:00 ONLY
+                if (not slot_key.is_evening_slot) or (slot_key.day != "TU"):
+                    penalty += PEN_HARD
+                    continue
+
+                # check all sections of CPSC 351 TUT/LAB/LEC
+                if problem.course_list.get(("CPSC", 351)) is not None:
+                    # get list of all CPSC 351 LECs
+                    lec_id = problem.course_list.get(("CPSC", 351))
+
+                    for l in lec_id:
+                        # checks if lecture is in schedule
+                        lec_event = problem.get_event(l)
+                        if not schedule.is_assigned(lec_event):
+                            continue
+                        # Check if the slot is the special slot
+                        lec_slot = schedule.get_assignment(lec_event)
+                        if lec_slot.start_time == "18:00" and lec_slot.day == "TU":
+                            penalty += PEN_HARD
+
+                if problem.tut_list.get(("CPSC", 351)) is not None:
+                    # get list of all CPSC 351 TUTs
+                    tut_id = problem.tut_list.get(("CPSC", 351))
+
+                    for t in tut_id:
+                        # checks if tutorial is in schedule
+                        t_event = problem.get_event(t)
+                        if not schedule.is_assigned(t_event):
+                            continue
+                        # Check if the slot is the special slot
+                        if schedule.get_assignment(t_event).is_tth_18_19_tutorial:
+                            penalty += PEN_HARD
+            # CPSC 913
+            else:
+                slot_key = schedule.get_assignment(assign)
+
+                # needs to be TU, 18:00 ONLY
+                if (not slot_key.is_evening_slot) or (slot_key.day != "TU"):
+                    penalty += PEN_HARD
+                    continue
+
+                # check all sections of CPSC 413 TUT/LAB/LEC
+                if problem.course_list.get(("CPSC", 413)) is not None:
+                    # get list of all CPSC 413 LECs
+                    lec_id = problem.course_list.get(("CPSC", 413))
+
+                    for l in lec_id:
+                        # checks if lecture is in schedule
+                        lec_event = problem.get_event(l)
+                        if not schedule.is_assigned(lec_event):
+                            continue
+                        # Check if the slot is the special slot
+                        lec_slot = schedule.get_assignment(lec_event)
+                        if lec_slot.start_time == "18:00" and lec_slot.day == "TU":
+                            penalty += PEN_HARD
+
+                if problem.tut_list.get(("CPSC", 413)) is not None:
+                    # get list of all CPSC 413 TUTs
+                    tut_id = problem.tut_list.get(("CPSC", 413))
+
+                    for t in tut_id:
+                        # checks if tutorial is in schedule
+                        t_event = problem.get_event(t)
+                        if not schedule.is_assigned(t_event):
+                            continue
+                        # Check if the slot is the special slot
+                        if schedule.get_assignment(t_event).is_tth_18_19_tutorial:
+                            penalty += PEN_HARD
+
+    return penalty
 
 
 # ------------

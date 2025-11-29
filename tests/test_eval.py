@@ -12,7 +12,9 @@ from parser.parser import parse_input_file
 from model.schedule import Schedule
 from parser.event import Event
 from eval.eval import eval, eval_pref, eval_pair, eval_minfilled, eval_secdiff
-from eval.hard_constraints import Valid, _check_5xx_lecures, _check_tutorials_section_diff_from_lecture
+from eval.hard_constraints import Valid
+
+from eval.hard_constraints import _check_5xx_lecures, _check_tutorials_section_diff_from_lecture, _check_evening_rules
 
 # test on input1.txt
 def test_eval(input_file="input/input3.txt"):
@@ -80,6 +82,14 @@ def create_schedule(problem):
 
     # CPSC 231 LEC 01 has tutorial at the same time -> violating hard constraint to be in same slot
     schedule.assign(problem.tut_by_id["CPSC 231 LEC 01 TUT 02"], problem.tut_slots_by_key[("TUT", "TU", "9:30")])
+
+    # Evening lecture with prefix "LEC 9"
+    schedule.assign(problem.lec_by_id["CPSC 415 LEC 91"], problem.lec_slots_by_key[("LEC", "TU", "18:00")])
+
+    # checks special lectures CPSC 851/CPSC 913 and overlapping with CPSC 351/413
+    schedule.assign(problem.lec_by_id["CPSC 913 LEC 01"], problem.lec_slots_by_key[("LEC", "TU", "18:00")])
+    schedule.assign(problem.tut_by_id["CPSC 413 LEC 01 TUT 01"], problem.tut_slots_by_key[("TUT", "TU", "18:00")])
+    schedule.assign(problem.lec_by_id["CPSC 413 LEC 01"], problem.lec_slots_by_key[("LEC", "MO", "18:00")])
 
     return schedule
 

@@ -16,7 +16,6 @@ FR, 10:00, 2, 1, 0
 
 TU, 9:30, 1, 1, 0
 
-TU, 18:00, 2, 0, 2
 MO, 18:00, 4, 1, 1
 
 Lectures:
@@ -31,8 +30,8 @@ CPSC 502 LEC 02, false
 
 CPSC 415 LEC 91, true
 
-CPSC 913 LEC 01, false
 CPSC 413 LEC 01, true
+CPSC 555 LEC 02, true
 
 Tutorials:
 CPSC 231 LEC 01 TUT 01, true
@@ -44,6 +43,9 @@ DATA 201 LEC 01 LAB 01, false
 SENG 300 TUT 01, false
 CPSC 413 LEC 01 TUT 01, true
 CPSC 413 LEC 01 TUT 02, false
+
+CPSC 913 TUT 01, false
+CPSC 851 TUT 01, false
 
 Not compatible:
 CPSC 231 LEC 01 TUT 01, CPSC 231 LEC 02 TUT 02

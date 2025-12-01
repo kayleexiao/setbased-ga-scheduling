@@ -130,11 +130,11 @@ def eval_secdiff(schedule, problem) -> int:
         # increment for each of same section
         same_section[key] = same_section.get(key, 0) + 1
     
-    # add penalty ONCE if same section in same slot
+    # add penalty for each section in same slot
     # MAYBE: change to multiplicative penalty if several sections in same slot?
     for (assign_key, slot_key), count in same_section.items():
         if count > 1:
-            sec_penalty += problem.pen_section
+            sec_penalty += (problem.pen_section * count)
 
     return sec_penalty
 

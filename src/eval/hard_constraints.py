@@ -252,8 +252,30 @@ def _check_partial_assignments(schedule: Schedule, problem: ProblemInstance) -> 
 
     For now, this is a stub that returns 0.
     """
-    # TODO: implement
-    return 0
+    penalty = 0
+
+    for partial in problem.partial_assignments:
+        str_event_id = partial.event_id
+        event_id = problem.get_event(str_event_id)
+
+        # check course is in schedule
+        if schedule.is_assigned(event_id):
+            # check if LEC or TUT
+            if partial.slot_key[0] == "LEC":
+                partial_slot_key = problem.get_lecture_slot(partial.slot_key)
+            else:
+                partial_slot_key = problem.get_tutorial_slot(partial.slot_key)
+
+            # check assigned slot matches partial assignment
+            assigned_slot_key = schedule.get_assignment(event_id)
+            if assigned_slot_key != partial_slot_key:
+                penalty += PEN_HARD
+
+        # course is not in schedule, apply penalty
+        else:
+            penalty += PEN_HARD
+
+    return penalty
 
 
 # checks C16 : for all in active_learning, lecture/tutorial is assigned to an AL slot
@@ -261,11 +283,35 @@ def _check_active_learning_requirements(schedule: Schedule, problem: ProblemInst
     """
     Check Active Learning (AL) requirements:
         - AL-required events must be placed in AL-capable slots.
-
-    For now, this is a stub that returns 0.
     """
-    # TODO: implement
-    return 0
+    penalty = 0
+    all_courses = problem.get_all_event_ids()
+
+    # creating a list of all events from the input file
+    events = []
+    for i in all_courses:
+        events.append(problem.get_event(i))
+
+    # check if AL required courses are scheduled at AL slots
+    for assign in events:
+        if assign.al_required:
+            # check if is assigned to a slot, if not apply penalty and continue
+            if not schedule.is_assigned(assign):
+                penalty += PEN_HARD
+                continue
+
+            # if assigned to a slot, check slot is AL, if not apply penalty
+            # check if TutorialSlot or LectureSlot AL_max > 0
+            # DOES NOT check number of assigned courses to a slot, ONLY if a slot is AL
+            slot_key = schedule.get_assignment(assign)
+            if isinstance(slot_key, TutorialSlot):
+                if slot_key.al_tutorial_max <= 0:
+                    penalty += PEN_HARD
+            else:
+                if slot_key.al_lecture_max <= 0:
+                    penalty += PEN_HARD
+
+    return penalty
 
 
 # checks C11 : for all lectures with prefix "DIV 9", assigned to a slot 18:00 or later
@@ -303,12 +349,17 @@ def _check_evening_rules(schedule: Schedule, problem: ProblemInstance) -> int:
             parts = str(assign).split()
             course, code = parts[0], parts[1]
 
+            # check if evening slot even exists first
+            if problem.get_slot(schedule.get_assignment(assign)) is None:
+                penalty += PEN_HARD
+                continue
+
             # CPSC 851
             if f"{course} {code}" == "CPSC 851":
                 slot_key = schedule.get_assignment(assign)
 
-                # needs to be TU, 18:00 ONLY
-                if (not slot_key.is_evening_slot) or (slot_key.day != "TU"):
+                # needs to be TUT, TU, 18:00 ONLY
+                if (not slot_key.is_evening_slot) or (slot_key.day != "TU") or (not isinstance(slot_key, TutorialSlot)):
                     penalty += PEN_HARD
                     continue
 
@@ -343,8 +394,8 @@ def _check_evening_rules(schedule: Schedule, problem: ProblemInstance) -> int:
             else:
                 slot_key = schedule.get_assignment(assign)
 
-                # needs to be TU, 18:00 ONLY
-                if (not slot_key.is_evening_slot) or (slot_key.day != "TU"):
+                # needs to be TUT, TU, 18:00 ONLY
+                if (not slot_key.is_evening_slot) or (slot_key.day != "TU") or (not isinstance(slot_key, TutorialSlot)):
                     penalty += PEN_HARD
                     continue
 

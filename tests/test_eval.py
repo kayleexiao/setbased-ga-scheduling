@@ -48,9 +48,6 @@ def test_eval(input_file="input/input3.txt"):
         hard_value = Valid(schedule, problem)
         print("HARD constraint value:", hard_value)
 
-       # _check_5xx_lecures(schedule, problem)
-        #_check_tutorials_section_diff_from_lecture(schedule, problem)
-
     except Exception: 
         print("Error")
         traceback.print_exc()
@@ -87,8 +84,8 @@ def create_schedule(problem):
     schedule.assign(problem.lec_by_id["CPSC 415 LEC 91"], problem.lec_slots_by_key[("LEC", "TU", "18:00")])
 
     # checks special lectures CPSC 851/CPSC 913 and overlapping with CPSC 351/413
-    schedule.assign(problem.lec_by_id["CPSC 913 LEC 01"], problem.lec_slots_by_key[("LEC", "TU", "18:00")])
-    schedule.assign(problem.tut_by_id["CPSC 413 LEC 01 TUT 01"], problem.tut_slots_by_key[("TUT", "TU", "18:00")])
+    schedule.assign(problem.tut_by_id["CPSC 851 TUT 01"], problem.tut_slots_by_key[("TUT", "MO", "18:00")])
+    schedule.assign(problem.tut_by_id["CPSC 413 LEC 01 TUT 01"], problem.tut_slots_by_key[("TUT", "MO", "18:00")])
     schedule.assign(problem.lec_by_id["CPSC 413 LEC 01"], problem.lec_slots_by_key[("LEC", "MO", "18:00")])
 
     return schedule

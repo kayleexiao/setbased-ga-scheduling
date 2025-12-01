@@ -225,13 +225,29 @@ def _check_tutorials_section_diff_from_lecture(schedule: Schedule, problem: Prob
 # checks C2 : for all in notcompatible, they are assigned to different slots (can be lecture/tutorials)
 def _check_not_compatible(schedule: Schedule, problem: ProblemInstance) -> int:
     """
-    Check NotCompatible(event_a, event_b) constraints.
-
-    For now, this is a stub that returns 0.
-    Later, this will ensure not-compatible events are not at the same time.
+    Check NotCompatible(event_a, event_b) constraints
     """
-    # TODO: implement
-    return 0
+    penalty = 0
+
+    # build event_id -> (day, time) lookup from the current schedule
+    event_time = {}
+    for event, slot in _iter_assignments(schedule):
+        event_time[event.id] = (slot.day, slot.start_time)
+
+    # check all NotCompatible pairs
+    for nc in problem.not_compatible:
+        a_id = nc.event_a_id
+        b_id = nc.event_b_id
+
+        # if one of them isn't assigned, we don't penalize here
+        if a_id not in event_time or b_id not in event_time:
+            continue
+
+        # if they share the same (day, time), it's a hard violation
+        if event_time[a_id] == event_time[b_id]:
+            penalty += PEN_HARD
+
+    return penalty
 
 
 # checks C4 : for all in unwanted, lecture/tutorial should be assigned to ANOTHER slot
@@ -239,10 +255,28 @@ def _check_unwanted(schedule: Schedule, problem: ProblemInstance) -> int:
     """
     Check Unwanted(event, slot) constraints.
 
-    For now, this is a stub that returns 0.
+    Right now, this DOESN'T penalize if something isn't scheduled... 
+    idk if thats riht but
     """
-    # TODO: implement
-    return 0
+    penalty = 0
+
+    for uw in problem.unwanted:
+        event_id = uw.event_id
+        slot_key_forbidden = uw.slot_key  
+
+        # look up the event object
+        event = problem.get_event(event_id)
+
+        # if the event isn't in the schedule at all, skip
+        if not schedule.is_assigned(event):
+            continue
+
+        assigned_slot = schedule.get_assignment(event)
+
+        if assigned_slot.slot_key == slot_key_forbidden:
+            penalty += PEN_HARD
+
+    return penalty
 
 
 # checks C3 : for all in partial_assign, should be assigned to specific slots (can be lectures/tutorials)
@@ -429,6 +463,24 @@ def _check_evening_rules(schedule: Schedule, problem: ProblemInstance) -> int:
 
     return penalty
 
+# checks C6 : department blackout
+def _check_department_blackout(schedule: Schedule, problem: ProblemInstance) -> int:
+    """
+    C6: No lectures are allowed in slot (TU, 11:00).
+
+    Note: parser already enforces allowed days/times for lecture slots,
+    but if a forbidden slot exists in the input, this double-checks that
+    no lecture is actually assigned there.
+    """
+    penalty = 0
+
+    for event, slot in _iter_assignments(schedule):
+        if event.is_lecture() and slot.day == "TU" and slot.start_time == "11:00":
+            penalty += PEN_HARD
+
+    return penalty
+
+
 
 # ------------
 # Public API 
@@ -449,7 +501,7 @@ def Valid(schedule: Schedule, problem: ProblemInstance) -> int:
     penalty += _check_partial_assignments(schedule, problem)
     penalty += _check_active_learning_requirements(schedule, problem)
     penalty += _check_evening_rules(schedule, problem)
-
+    penalty += _check_department_blackout(schedule, problem)
     penalty += _check_5xx_lecures(schedule, problem)
     penalty += _check_tutorials_section_diff_from_lecture(schedule, problem)
     return penalty

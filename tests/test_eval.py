@@ -14,8 +14,6 @@ from parser.event import Event
 from eval.eval import eval, eval_pref, eval_pair, eval_minfilled, eval_secdiff
 from eval.hard_constraints import Valid
 
-from eval.hard_constraints import _check_5xx_lecures, _check_tutorials_section_diff_from_lecture, _check_evening_rules
-
 # test on input1.txt
 def test_eval(input_file="input/input3.txt"):
 

@@ -144,10 +144,9 @@ def parse_input_file(filepath, pen_lecturemin=1, pen_tutorialmin=1,
     print(f"Parsing complete: {problem}")
     return problem
 
-# *********** DOUBLE CHECK THIS (make sure this is what the spec meant)
 # function to handle special courses CPSC 851 and CPSC 913
-    # - if CPSC 351 lectures exist, CPSC 851 must be scheduled
-    # - if CPSC 413 lectures exist, CPSC 913 must be scheduled
+    # - if CPSC 351 lectures exist, CPSC 851 tut must be scheduled
+    # - if CPSC 413 lectures exist, CPSC 913 tut must be scheduled
     # - scheduled in tutorial slots at Tu/Th 18:00-19:00
 def handle_special_courses(problem):
     from .event import Event
@@ -157,7 +156,7 @@ def handle_special_courses(problem):
     cpsc_351_lectures = problem.get_lectures_for_course("CPSC", 351)
     if cpsc_351_lectures:
         # create CPSC 851 if it doesn't exist
-        cpsc_851_id = "CPSC 851 LEC 01"
+        cpsc_851_id = "CPSC 851 TUT 01"
         if cpsc_851_id not in problem.events_by_id:
             print(f"Adding special course: {cpsc_851_id}")
             event_851 = Event(cpsc_851_id, al_required=False)
@@ -184,7 +183,7 @@ def handle_special_courses(problem):
     cpsc_413_lectures = problem.get_lectures_for_course("CPSC", 413)
     if cpsc_413_lectures:
         # create CPSC 913 if it doesn't exist
-        cpsc_913_id = "CPSC 913 LEC 01"
+        cpsc_913_id = "CPSC 913 TUT 01"
         if cpsc_913_id not in problem.events_by_id:
             print(f"Adding special course: {cpsc_913_id}")
             event_913 = Event(cpsc_913_id, al_required=False)

@@ -19,6 +19,14 @@ class Schedule:
     def is_assigned(self, event):
         return event in self.assignments
     
+    # returns a copy of the schedule
+    def copy(self):
+        return Schedule(assignments=dict(self.assignments))
+    
+    # count number of assignments in the schedule
+    def count_assignments(self):
+        return len(self.assignments)
+    
     # representation of the schedule
     def __repr__(self):
         if not self.assignments:

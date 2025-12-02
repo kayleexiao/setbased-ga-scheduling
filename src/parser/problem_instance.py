@@ -91,6 +91,18 @@ class ProblemInstance:
             return self.lec_slots_by_key[slot_key]
         return self.tut_slots_by_key.get(slot_key)
     
+    # getter func for all lecture slot keys
+    # returns list of slot_keys
+    def get_all_lecture_slot_keys(self):
+        """Returns list of all lecture slot_keys"""
+        return list(self.lec_slots_by_key.keys())
+    
+    # getter func for all tutorial slot keys
+    # returns list of slot_keys
+    def get_all_tutorial_slot_keys(self):
+        """Returns list of all tutorial slot_keys"""
+        return list(self.tut_slots_by_key.keys())
+    
     # string representation of the ProblemInstance object
     def __repr__(self):
         return (f"ProblemInstance(name='{self.name}', "

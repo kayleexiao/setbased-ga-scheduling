@@ -483,7 +483,7 @@ def _check_department_blackout(schedule: Schedule, problem: ProblemInstance) -> 
 
 
 # ------------
-# Public API 
+# Public API
 # ------------
 
 def Valid(schedule: Schedule, problem: ProblemInstance) -> int:

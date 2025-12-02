@@ -1,0 +1,586 @@
+
+======================================================================
+RUNNING ALL INITIAL STATE TESTS
+======================================================================
+
+======================================================================
+TEST: Initial State Generation with input1.txt
+======================================================================
+Parsing lecture slots...
+Parsing tutorial slots...
+Parsing lectures...
+Parsing tutorials...
+Parsing constraints...
+Warning: Unknown event in preferences: CPSC 231 LEC 01 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Validated 2 partial assignments
+Parsing complete: ProblemInstance(name='ShortExample', lectures=4, tutorials=4, lec_slots=3, tut_slots=3)
+
+Problem loaded: ProblemInstance(name='ShortExample', lectures=4, tutorials=4, lec_slots=3, tut_slots=3)
+
+Recommended population size k: 13
+
+============================================================
+INITIAL POPULATION SUMMARY
+============================================================
+Population size: 13
+Total events to schedule: 8
+  - Lectures: 4
+  - Tutorials: 4
+
+Available slots:
+  - Lecture slots: 3
+  - Tutorial slots: 3
+
+Constraints:
+  - Partial assignments: 2
+  - Not compatible pairs: 5
+  - Unwanted assignments: 1
+  - Preferences: 3
+  - Pair constraints: 1
+
+Schedule completeness check:
+  Schedule 1: 8/8 events assigned +
+  Schedule 2: 8/8 events assigned +
+  Schedule 3: 8/8 events assigned +
+  Schedule 4: 8/8 events assigned +
+  Schedule 5: 8/8 events assigned +
+  Schedule 6: 8/8 events assigned +
+  Schedule 7: 8/8 events assigned +
+  Schedule 8: 8/8 events assigned +
+  Schedule 9: 8/8 events assigned +
+  Schedule 10: 8/8 events assigned +
+  Schedule 11: 8/8 events assigned +
+  Schedule 12: 8/8 events assigned +
+  Schedule 13: 8/8 events assigned +
+
+Population fitness statistics:
+  Eval scores (soft constraints):
+    Min: 15.00
+    Max: 30.00
+    Avg: 21.38
+  Fitness scores:
+    Min: 0.0052
+    Max: 0.0625
+    Avg: 0.0168
+
+Hard constraint violations:
+  Schedule 1:  ─ INVALID (penalty: 6)
+  Schedule 2:  ─ INVALID (penalty: 9)
+  Schedule 3:  ─ INVALID (penalty: 5)
+  Schedule 4:  ─ INVALID (penalty: 16)
+  Schedule 5:  ─ INVALID (penalty: 10)
+  Schedule 6:  ─ INVALID (penalty: 6)
+  Schedule 7:  ─ INVALID (penalty: 5)
+  Schedule 8:  ─ INVALID (penalty: 6)
+  Schedule 9:  ─ INVALID (penalty: 1)
+  Schedule 10: + VALID
+  Schedule 11:  ─ INVALID (penalty: 3)
+  Schedule 12:  ─ INVALID (penalty: 6)
+  Schedule 13:  ─ INVALID (penalty: 10)
+============================================================
+
+
+======================================================================
+DETAILED POPULATION VIEW - ALL FACTS (COMPLETE SCHEDULES)
+======================================================================
+
+──────────────────────────────────────────────────────────────────────
+FACT #1 - Complete Schedule
+──────────────────────────────────────────────────────────────────────
+Hard Constraint Penalty (Valid): 6
+Soft Constraint Penalty (Eval): 16
+Fitness Score: 0.012987
+Probability: 0.000000
+Total Assignments: 8
+Status: ─ INVALID (6 hard constraint violations)
+
+  LECTURES (4):
+    • DATA 201 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 02                → MO, 8:00 [AL]
+    • SENG 300 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 01                → TU, 9:30 [AL]
+
+  TUTORIALS (4):
+    • SENG 300 TUT 01                → MO, 8:00
+    • CPSC 231 LEC 02 TUT 02         → TU, 10:00 [AL]
+    • DATA 201 LEC 01 LAB 01         → FR, 10:00
+    • CPSC 231 LEC 01 TUT 01         → FR, 10:00 [AL]
+
+──────────────────────────────────────────────────────────────────────
+FACT #2 - Complete Schedule
+──────────────────────────────────────────────────────────────────────
+Hard Constraint Penalty (Valid): 9
+Soft Constraint Penalty (Eval): 27
+Fitness Score: 0.008475
+Probability: 0.000000
+Total Assignments: 8
+Status: ─ INVALID (9 hard constraint violations)
+
+  LECTURES (4):
+    • DATA 201 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 01                → MO, 8:00 [AL]
+    • CPSC 231 LEC 02                → MO, 8:00 [AL]
+    • SENG 300 LEC 01                → TU, 9:30
+
+  TUTORIALS (4):
+    • CPSC 231 LEC 01 TUT 01         → MO, 8:00 [AL]
+    • DATA 201 LEC 01 LAB 01         → FR, 10:00
+    • CPSC 231 LEC 02 TUT 02         → FR, 10:00 [AL]
+    • SENG 300 TUT 01                → FR, 10:00
+
+──────────────────────────────────────────────────────────────────────
+FACT #3 - Complete Schedule
+──────────────────────────────────────────────────────────────────────
+Hard Constraint Penalty (Valid): 5
+Soft Constraint Penalty (Eval): 16
+Fitness Score: 0.014925
+Probability: 0.000000
+Total Assignments: 8
+Status: ─ INVALID (5 hard constraint violations)
+
+  LECTURES (4):
+    • DATA 201 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 02                → MO, 8:00 [AL]
+    • CPSC 231 LEC 01                → TU, 9:30 [AL]
+    • SENG 300 LEC 01                → TU, 9:30
+
+  TUTORIALS (4):
+    • CPSC 231 LEC 02 TUT 02         → MO, 8:00 [AL]
+    • SENG 300 TUT 01                → MO, 8:00
+    • CPSC 231 LEC 01 TUT 01         → TU, 10:00 [AL]
+    • DATA 201 LEC 01 LAB 01         → FR, 10:00
+
+──────────────────────────────────────────────────────────────────────
+FACT #4 - Complete Schedule
+──────────────────────────────────────────────────────────────────────
+Hard Constraint Penalty (Valid): 16
+Soft Constraint Penalty (Eval): 30
+Fitness Score: 0.005236
+Probability: 0.000000
+Total Assignments: 8
+Status: ─ INVALID (16 hard constraint violations)
+
+  LECTURES (4):
+    • DATA 201 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 01                → MO, 8:00 [AL]
+    • CPSC 231 LEC 02                → MO, 8:00 [AL]
+    • SENG 300 LEC 01                → MO, 8:00
+
+  TUTORIALS (4):
+    • SENG 300 TUT 01                → MO, 8:00
+    • DATA 201 LEC 01 LAB 01         → FR, 10:00
+    • CPSC 231 LEC 01 TUT 01         → FR, 10:00 [AL]
+    • CPSC 231 LEC 02 TUT 02         → FR, 10:00 [AL]
+
+──────────────────────────────────────────────────────────────────────
+FACT #5 - Complete Schedule
+──────────────────────────────────────────────────────────────────────
+Hard Constraint Penalty (Valid): 10
+Soft Constraint Penalty (Eval): 19
+Fitness Score: 0.008333
+Probability: 0.000000
+Total Assignments: 8
+Status: ─ INVALID (10 hard constraint violations)
+
+  LECTURES (4):
+    • DATA 201 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 02                → MO, 8:00 [AL]
+    • CPSC 231 LEC 01                → TU, 9:30 [AL]
+    • SENG 300 LEC 01                → TU, 9:30
+
+  TUTORIALS (4):
+    • DATA 201 LEC 01 LAB 01         → FR, 10:00
+    • CPSC 231 LEC 01 TUT 01         → FR, 10:00 [AL]
+    • CPSC 231 LEC 02 TUT 02         → FR, 10:00 [AL]
+    • SENG 300 TUT 01                → FR, 10:00
+
+──────────────────────────────────────────────────────────────────────
+FACT #6 - Complete Schedule
+──────────────────────────────────────────────────────────────────────
+Hard Constraint Penalty (Valid): 6
+Soft Constraint Penalty (Eval): 26
+Fitness Score: 0.011494
+Probability: 0.000000
+Total Assignments: 8
+Status: ─ INVALID (6 hard constraint violations)
+
+  LECTURES (4):
+    • DATA 201 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 02                → MO, 8:00 [AL]
+    • CPSC 231 LEC 01                → MO, 9:00 [AL]
+    • SENG 300 LEC 01                → MO, 9:00
+
+  TUTORIALS (4):
+    • SENG 300 TUT 01                → MO, 8:00
+    • CPSC 231 LEC 02 TUT 02         → TU, 10:00 [AL]
+    • DATA 201 LEC 01 LAB 01         → FR, 10:00
+    • CPSC 231 LEC 01 TUT 01         → FR, 10:00 [AL]
+
+──────────────────────────────────────────────────────────────────────
+FACT #7 - Complete Schedule
+──────────────────────────────────────────────────────────────────────
+Hard Constraint Penalty (Valid): 5
+Soft Constraint Penalty (Eval): 16
+Fitness Score: 0.014925
+Probability: 0.000000
+Total Assignments: 8
+Status: ─ INVALID (5 hard constraint violations)
+
+  LECTURES (4):
+    • DATA 201 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 01                → MO, 8:00 [AL]
+    • SENG 300 LEC 01                → MO, 9:00
+    • CPSC 231 LEC 02                → TU, 9:30 [AL]
+
+  TUTORIALS (4):
+    • SENG 300 TUT 01                → MO, 8:00
+    • CPSC 231 LEC 01 TUT 01         → TU, 10:00 [AL]
+    • CPSC 231 LEC 02 TUT 02         → TU, 10:00 [AL]
+    • DATA 201 LEC 01 LAB 01         → FR, 10:00
+
+──────────────────────────────────────────────────────────────────────
+FACT #8 - Complete Schedule
+──────────────────────────────────────────────────────────────────────
+Hard Constraint Penalty (Valid): 6
+Soft Constraint Penalty (Eval): 22
+Fitness Score: 0.012048
+Probability: 0.000000
+Total Assignments: 8
+Status: ─ INVALID (6 hard constraint violations)
+
+  LECTURES (4):
+    • DATA 201 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 01                → MO, 8:00 [AL]
+    • SENG 300 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 02                → MO, 9:00 [AL]
+
+  TUTORIALS (4):
+    • CPSC 231 LEC 01 TUT 01         → MO, 8:00 [AL]
+    • SENG 300 TUT 01                → MO, 8:00
+    • CPSC 231 LEC 02 TUT 02         → TU, 10:00 [AL]
+    • DATA 201 LEC 01 LAB 01         → FR, 10:00
+
+──────────────────────────────────────────────────────────────────────
+FACT #9 - Complete Schedule
+──────────────────────────────────────────────────────────────────────
+Hard Constraint Penalty (Valid): 1
+Soft Constraint Penalty (Eval): 28
+Fitness Score: 0.025641
+Probability: 0.000000
+Total Assignments: 8
+Status: ─ INVALID (1 hard constraint violations)
+
+  LECTURES (4):
+    • DATA 201 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 01                → MO, 9:00 [AL]
+    • CPSC 231 LEC 02                → MO, 9:00 [AL]
+    • SENG 300 LEC 01                → TU, 9:30
+
+  TUTORIALS (4):
+    • CPSC 231 LEC 02 TUT 02         → MO, 8:00 [AL]
+    • CPSC 231 LEC 01 TUT 01         → TU, 10:00 [AL]
+    • DATA 201 LEC 01 LAB 01         → FR, 10:00
+    • SENG 300 TUT 01                → FR, 10:00
+
+──────────────────────────────────────────────────────────────────────
+FACT #10 - Complete Schedule
+──────────────────────────────────────────────────────────────────────
+Hard Constraint Penalty (Valid): 0
+Soft Constraint Penalty (Eval): 15
+Fitness Score: 0.062500
+Probability: 0.000000
+Total Assignments: 8
+Status: + VALID (satisfies all hard constraints)
+
+  LECTURES (4):
+    • DATA 201 LEC 01                → MO, 8:00
+    • SENG 300 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 01                → MO, 9:00 [AL]
+    • CPSC 231 LEC 02                → TU, 9:30 [AL]
+
+  TUTORIALS (4):
+    • CPSC 231 LEC 02 TUT 02         → MO, 8:00 [AL]
+    • CPSC 231 LEC 01 TUT 01         → TU, 10:00 [AL]
+    • DATA 201 LEC 01 LAB 01         → FR, 10:00
+    • SENG 300 TUT 01                → FR, 10:00
+
+──────────────────────────────────────────────────────────────────────
+FACT #11 - Complete Schedule
+──────────────────────────────────────────────────────────────────────
+Hard Constraint Penalty (Valid): 3
+Soft Constraint Penalty (Eval): 17
+Fitness Score: 0.020833
+Probability: 0.000000
+Total Assignments: 8
+Status: ─ INVALID (3 hard constraint violations)
+
+  LECTURES (4):
+    • DATA 201 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 01                → MO, 9:00 [AL]
+    • CPSC 231 LEC 02                → TU, 9:30 [AL]
+    • SENG 300 LEC 01                → TU, 9:30
+
+  TUTORIALS (4):
+    • SENG 300 TUT 01                → MO, 8:00
+    • CPSC 231 LEC 01 TUT 01         → TU, 10:00 [AL]
+    • DATA 201 LEC 01 LAB 01         → FR, 10:00
+    • CPSC 231 LEC 02 TUT 02         → FR, 10:00 [AL]
+
+──────────────────────────────────────────────────────────────────────
+FACT #12 - Complete Schedule
+──────────────────────────────────────────────────────────────────────
+Hard Constraint Penalty (Valid): 6
+Soft Constraint Penalty (Eval): 16
+Fitness Score: 0.012987
+Probability: 0.000000
+Total Assignments: 8
+Status: ─ INVALID (6 hard constraint violations)
+
+  LECTURES (4):
+    • DATA 201 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 02                → MO, 8:00 [AL]
+    • SENG 300 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 01                → TU, 9:30 [AL]
+
+  TUTORIALS (4):
+    • CPSC 231 LEC 02 TUT 02         → MO, 8:00 [AL]
+    • SENG 300 TUT 01                → TU, 10:00
+    • DATA 201 LEC 01 LAB 01         → FR, 10:00
+    • CPSC 231 LEC 01 TUT 01         → FR, 10:00 [AL]
+
+──────────────────────────────────────────────────────────────────────
+FACT #13 - Complete Schedule
+──────────────────────────────────────────────────────────────────────
+Hard Constraint Penalty (Valid): 10
+Soft Constraint Penalty (Eval): 30
+Fitness Score: 0.007634
+Probability: 0.000000
+Total Assignments: 8
+Status: ─ INVALID (10 hard constraint violations)
+
+  LECTURES (4):
+    • DATA 201 LEC 01                → MO, 8:00
+    • CPSC 231 LEC 01                → MO, 8:00 [AL]
+    • CPSC 231 LEC 02                → MO, 8:00 [AL]
+    • SENG 300 LEC 01                → MO, 8:00
+
+  TUTORIALS (4):
+    • CPSC 231 LEC 01 TUT 01         → TU, 10:00 [AL]
+    • CPSC 231 LEC 02 TUT 02         → TU, 10:00 [AL]
+    • SENG 300 TUT 01                → TU, 10:00
+    • DATA 201 LEC 01 LAB 01         → FR, 10:00
+
+======================================================================
+END OF POPULATION - Total Facts: 13
+======================================================================
+
++ TEST PASSED: All schedules are complete
+
+======================================================================
+TEST: Initial State Generation with Custom k=5
+======================================================================
+Parsing lecture slots...
+Parsing tutorial slots...
+Parsing lectures...
+Parsing tutorials...
+Parsing constraints...
+Warning: Unknown event in preferences: CPSC 231 LEC 01 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Validated 2 partial assignments
+Parsing complete: ProblemInstance(name='ShortExample', lectures=4, tutorials=4, lec_slots=3, tut_slots=3)
+
+Generated population with k=5
+Actual population size: 5
+
+Verifying tuple structure for each individual:
+  Fact #1: eval=16, fitness=0.012987, prob=0.000000
+  Fact #2: eval=27, fitness=0.008475, prob=0.000000
+  Fact #3: eval=16, fitness=0.014925, prob=0.000000
+  Fact #4: eval=30, fitness=0.005236, prob=0.000000
+  Fact #5: eval=19, fitness=0.008333, prob=0.000000
+
++ TEST PASSED: Population size matches k
+
+======================================================================
+TEST: Type Safety (Lectures→Lecture Slots, Tutorials→Tutorial Slots)
+======================================================================
+Parsing lecture slots...
+Parsing tutorial slots...
+Parsing lectures...
+Parsing tutorials...
+Parsing constraints...
+Warning: Unknown event in preferences: CPSC 231 LEC 01 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Validated 2 partial assignments
+Parsing complete: ProblemInstance(name='ShortExample', lectures=4, tutorials=4, lec_slots=3, tut_slots=3)
++ TEST PASSED: All events assigned to correct slot types
+
+======================================================================
+TEST: Eval and Fitness Values Properly Computed
+======================================================================
+Parsing lecture slots...
+Parsing tutorial slots...
+Parsing lectures...
+Parsing tutorials...
+Parsing constraints...
+Warning: Unknown event in preferences: CPSC 231 LEC 01 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Validated 2 partial assignments
+Parsing complete: ProblemInstance(name='ShortExample', lectures=4, tutorials=4, lec_slots=3, tut_slots=3)
+
+Generated 10 schedules
+
+Verifying eval and fitness computation:
+  + Fact #1:
+      Stored: eval=16, fitness=0.012987
+      Expected: eval=16, fitness=0.012987
+  + Fact #2:
+      Stored: eval=27, fitness=0.008475
+      Expected: eval=27, fitness=0.008475
+  + Fact #3:
+      Stored: eval=16, fitness=0.014925
+      Expected: eval=16, fitness=0.014925
+  + Fact #4:
+      Stored: eval=30, fitness=0.005236
+      Expected: eval=30, fitness=0.005236
+  + Fact #5:
+      Stored: eval=19, fitness=0.008333
+      Expected: eval=19, fitness=0.008333
+  + Fact #6:
+      Stored: eval=26, fitness=0.011494
+      Expected: eval=26, fitness=0.011494
+  + Fact #7:
+      Stored: eval=16, fitness=0.014925
+      Expected: eval=16, fitness=0.014925
+  + Fact #8:
+      Stored: eval=22, fitness=0.012048
+      Expected: eval=22, fitness=0.012048
+  + Fact #9:
+      Stored: eval=28, fitness=0.025641
+      Expected: eval=28, fitness=0.025641
+  + Fact #10:
+      Stored: eval=15, fitness=0.062500
+      Expected: eval=15, fitness=0.062500
+
++ TEST PASSED: All eval and fitness values correctly computed
+
+======================================================================
+TEST: Fitness Formula = 1/(1 + w_hard*Valid + w_soft*Eval)
+======================================================================
+Parsing lecture slots...
+Parsing tutorial slots...
+Parsing lectures...
+Parsing tutorials...
+Parsing constraints...
+Warning: Unknown event in preferences: CPSC 231 LEC 01 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Validated 2 partial assignments
+Parsing complete: ProblemInstance(name='ShortExample', lectures=4, tutorials=4, lec_slots=3, tut_slots=3)
+
+Testing with w_hard=10, w_soft=1:
+  + Fact #1: valid=6, eval=16, fitness=0.012987 (expected 0.012987)
+  + Fact #2: valid=9, eval=27, fitness=0.008475 (expected 0.008475)
+  + Fact #3: valid=5, eval=16, fitness=0.014925 (expected 0.014925)
+  + Fact #4: valid=16, eval=30, fitness=0.005236 (expected 0.005236)
+  + Fact #5: valid=10, eval=19, fitness=0.008333 (expected 0.008333)
+
+Testing with w_hard=10, w_soft=0.7:
+  + Fact #1: valid=6, eval=16, fitness=0.013850 (expected 0.013850)
+  + Fact #2: valid=9, eval=27, fitness=0.009099 (expected 0.009099)
+  + Fact #3: valid=5, eval=16, fitness=0.016077 (expected 0.016077)
+  + Fact #4: valid=16, eval=30, fitness=0.005495 (expected 0.005495)
+  + Fact #5: valid=10, eval=19, fitness=0.008749 (expected 0.008749)
+
+Testing with w_hard=1, w_soft=1:
+  + Fact #1: valid=6, eval=16, fitness=0.043478 (expected 0.043478)
+  + Fact #2: valid=9, eval=27, fitness=0.027027 (expected 0.027027)
+  + Fact #3: valid=5, eval=16, fitness=0.045455 (expected 0.045455)
+  + Fact #4: valid=16, eval=30, fitness=0.021277 (expected 0.021277)
+  + Fact #5: valid=10, eval=19, fitness=0.033333 (expected 0.033333)
+
+Testing with w_hard=100, w_soft=1:
+  + Fact #1: valid=6, eval=16, fitness=0.001621 (expected 0.001621)
+  + Fact #2: valid=9, eval=27, fitness=0.001078 (expected 0.001078)
+  + Fact #3: valid=5, eval=16, fitness=0.001934 (expected 0.001934)
+  + Fact #4: valid=16, eval=30, fitness=0.000613 (expected 0.000613)
+  + Fact #5: valid=10, eval=19, fitness=0.000980 (expected 0.000980)
+
++ TEST PASSED: Fitness formula correctly implemented
+
+======================================================================
+TEST: Partial Assignments Respected
+======================================================================
+Parsing lecture slots...
+Parsing tutorial slots...
+Parsing lectures...
+Parsing tutorials...
+Parsing constraints...
+Warning: Unknown event in preferences: CPSC 231 LEC 01 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Validated 2 partial assignments
+Parsing complete: ProblemInstance(name='ShortExample', lectures=4, tutorials=4, lec_slots=3, tut_slots=3)
+
+Number of partial assignments: 2
+  - DATA 201 LEC 01 must be in slot ('LEC', 'MO', '8:00')
+  - DATA 201 LEC 01 LAB 01 must be in slot ('TUT', 'FR', '10:00')
+
++ TEST PASSED: All partial assignments respected
+
+======================================================================
+TEST: Dynamic k Calculation
+======================================================================
+Parsing lecture slots...
+Parsing tutorial slots...
+Parsing lectures...
+Parsing tutorials...
+Parsing constraints...
+Warning: Unknown event in preferences: CPSC 231 LEC 01 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Validated 2 partial assignments
+Parsing complete: ProblemInstance(name='ShortExample', lectures=4, tutorials=4, lec_slots=3, tut_slots=3)
+
+Calculated k values:
+  - Conservative (scale=1.0, range=[5,50]): k=6
+  - Moderate (scale=2.0, range=[10,100]): k=13
+  - Aggressive (scale=3.0, range=[20,200]): k=20
+
++ TEST PASSED: All k values within specified ranges
+
+======================================================================
+TEST: Probability Initialization (should be 0)
+======================================================================
+Parsing lecture slots...
+Parsing tutorial slots...
+Parsing lectures...
+Parsing tutorials...
+Parsing constraints...
+Warning: Unknown event in preferences: CPSC 231 LEC 01 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Warning: Unknown event in preferences: CPSC 231 LEC 02 LAB 02. Skipping.
+Validated 2 partial assignments
+Parsing complete: ProblemInstance(name='ShortExample', lectures=4, tutorials=4, lec_slots=3, tut_slots=3)
++ TEST PASSED: All probability values initialized to 0
+
+======================================================================
+TEST SUMMARY
+======================================================================
++ PASSED: Initial State Generation
++ PASSED: Custom k Value
++ PASSED: Type Safety
++ PASSED: Eval/Fitness Computation
++ PASSED: Fitness Formula
++ PASSED: Partial Assignments
++ PASSED: Dynamic k Calculation
++ PASSED: Probability Initialization
+
+Total: 8/8 tests passed
+======================================================================
+

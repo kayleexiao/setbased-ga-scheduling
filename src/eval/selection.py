@@ -50,5 +50,22 @@ def probability(f):
     return new_f
 
 
-def running_sum(f, problem):
-    return None
+def running_sum(f):
+    """
+    builds the cumulative (running) sum over the probabilities!
+    input: f: [(schedule, eval_value, fit_value, probability), ...]
+    output: new_f: [(schedule, eval_value, fit_value, cumulative_probability), ...]
+    """
+    new_f = []
+    running_total = 0.0
+
+    for schedule, eval_value, fit_value, prob in f:
+        running_total += prob
+        new_f.append((schedule, eval_value, fit_value, running_total))
+
+    # force the last cumulative probability to be exactly 1.0 (just to avoid float issues lol)
+    if new_f:
+        schedule, eval_value, fit_value, _ = new_f[-1]
+        new_f[-1] = (schedule, eval_value, fit_value, 1.0)
+
+    return new_f

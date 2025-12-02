@@ -29,11 +29,12 @@ def print_detailed_population(population, problem_instance):
     print("DETAILED POPULATION VIEW - ALL FACTS (COMPLETE SCHEDULES)")
     print("="*70)
     
-    for idx, (schedule, eval_score) in enumerate(population, 1):
+    for idx, (schedule, eval_score, probability) in enumerate(population, 1):
         print(f"\n{'─'*70}")
         print(f"FACT #{idx} - Complete Schedule")
         print(f"{'─'*70}")
         print(f"Eval Score: {eval_score}")
+        print(f"Probability: {probability}")
         print(f"Total Assignments: {schedule.count_assignments()}")
         
         # Separate lectures and tutorials
@@ -108,8 +109,8 @@ def print_compact_population(population, problem_instance):
     print("COMPACT POPULATION VIEW")
     print("="*70)
     
-    for idx, (schedule, eval_score) in enumerate(population, 1):
-        print(f"\n[Fact #{idx}] Eval: {eval_score}, Assignments: {schedule.count_assignments()}")
+    for idx, (schedule, eval_score, probability) in enumerate(population, 1):
+        print(f"\n[Fact #{idx}] Eval: {eval_score}, Prob: {probability}, Assignments: {schedule.count_assignments()}")
         
         # Group by slot for compact display
         slot_to_events = {}
@@ -169,7 +170,7 @@ def test_initial_state_input2():
     total_events = len(problem.get_all_event_ids())
     all_complete = all(
         schedule.count_assignments() == total_events
-        for schedule, _ in population
+        for schedule, _, _ in population
     )
     
     if all_complete:
@@ -243,7 +244,7 @@ def test_type_safety():
     # Check type safety
     violations = []
     
-    for idx, (schedule, _) in enumerate(population):
+    for idx, (schedule, _, _) in enumerate(population):
         for event_id, slot_key in schedule.assignments.items():
             event = problem.get_event(event_id)
             slot = problem.get_slot(slot_key)
@@ -302,7 +303,7 @@ def test_partial_assignments():
     # Check that all schedules respect partial assignments
     violations = []
     
-    for idx, (schedule, _) in enumerate(population):
+    for idx, (schedule, _, _) in enumerate(population):
         for pa in problem.partial_assignments:
             assigned_slot = schedule.get_assignment(pa.event_id)
             if assigned_slot != pa.slot_key:

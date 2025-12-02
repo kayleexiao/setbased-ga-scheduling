@@ -27,8 +27,8 @@ def generate_initial_state(problem_instance, k, seed=None):
         seed: Random seed for reproducibility (optional, probably use for testing/debugging)
     
     Returns:
-        List of tuples: [(schedule_1, eval_score_1, probability_1), ..., (schedule_k, eval_score_k, probability_k)]
-        where each schedule is a complete random assignment, eval_score is placeholder 0, and probability is placeholder 0.5
+        List of tuples: [(schedule_1, eval_1, fitness_1, probability_1), ..., (schedule_k, eval_k, fitness_k, probability_k)]
+        where each schedule is a complete random assignment, eval is placeholder 0, fitness is placeholder 0, and probability is placeholder 0.5
     """
     if seed is not None:
         random.seed(seed)
@@ -38,10 +38,11 @@ def generate_initial_state(problem_instance, k, seed=None):
     # generate k complete schedules
     for i in range(k):
         schedule = generate_single_complete_schedule(problem_instance)
-        # store as tuple (schedule, fitness_score, probability)
-        # fitness_score initialized to 0, will be updated by fitness function
-        # probability initialized to 0.5 (placeholder), will be updated by probability function
-        population.append((schedule, 0, 0.5))
+        # store as tuple (schedule, eval, fitness, probability)
+        # eval initialized to 0, will be UPDATED by evaluation function
+        # fitness initialized to 0, will be UPDATED by fitness function
+        # probability initialized to 0.5 (placeholder), will be UPDATED by probability function
+        population.append((schedule, 0, 0, 0.5))
     
     return population
 
@@ -111,7 +112,7 @@ def print_population_summary(population, problem_instance):
     Print summary statistics about the initial population.
     
     Args:
-        population: List of (schedule, eval_score, probability) tuples
+        population: List of (schedule, eval, fitness, probability) tuples
         problem_instance: ProblemInstance
     """
     print(f"\n{'='*60}")
@@ -137,7 +138,7 @@ def print_population_summary(population, problem_instance):
     
     # check completeness of schedules
     print(f"\nSchedule completeness check:")
-    for i, (schedule, _, _) in enumerate(population):
+    for i, (schedule, _, _, _) in enumerate(population):
         assigned = schedule.count_assignments()
         complete = "+" if assigned == total_events else "─"
         print(f"  Schedule {i+1}: {assigned}/{total_events} events assigned {complete}")

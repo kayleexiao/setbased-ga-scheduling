@@ -3,6 +3,11 @@ from .schedule import Schedule
 from parser.event import Event
 from parser.constants import *
 
+# Special event helper
+def is_special(event):
+    """Return True if event is CPSC 851 or CPSC 913 special tutorial."""
+    return getattr(event, "is_special_tut", False)
+
 # note: for extension functions, do we want to consider if the tutorial/lecture has already filled up? is there a counter to how many events we've assigned to the slots
 
 
@@ -16,6 +21,10 @@ def mutate_evening(f, slots):
     
     # finding all evening events in the schedule
     evening_events = [e for e in f_prime.assignments if e.is_evening_event]
+
+    # Exclude special tutorials
+    evening_events = [e for e in evening_events if not is_special(e)]
+
     # if there are no evening events, return the None (can't mutate), avoiding returning the same schedule
     if not evening_events:
         return None
@@ -52,6 +61,10 @@ def mutate_AL(f, slots):
     
     # finding all active learning required events in the schedule
     al_events = [e for e in f_prime.assignments if e.al_required]
+
+    # Exclude special tutorials
+    al_events = [e for e in al_events if not is_special(e)]
+
     # if there are no active learning events, return the original schedule (can't mutate), avoiding returning the same schedule
     if not al_events:
         return None
@@ -94,6 +107,10 @@ def mutate_lecture(f, slots):
     
     # find all lecture events in the schedule
     lecture_events = [e for e in f_prime.assignments if e.is_lecture()]
+
+    # Exclude special tutorials
+    lecture_events = [e for e in lecture_events if not is_special(e)]
+
     # if there are no lecture events, return the original schedule (can't mutate), avoiding returning the same schedule
     if not lecture_events:
         return None
@@ -125,6 +142,10 @@ def mutate_tutorial(f, slots):
     
     # find all tutorial events in the schedule
     tutorial_events = [e for e in f_prime.assignments if e.is_tutorial()]
+
+    # Exclude special tutorials
+    tutorial_events = [e for e in tutorial_events if not is_special(e)]
+
     # if there are no tutorial events, return the original schedule (can't mutate), avoiding returning the same schedule
     if not tutorial_events:
         return None
@@ -156,6 +177,11 @@ def crossover(f_a, f_b):
 
     # iterating through each event
     for e in f_a.assignments:
+
+        if is_special(e):
+            f_c.assign(e,f_a.get_assignment(e))
+            continue
+
         # randomly assigning the event's slot from one of the parents
         if random.choice([True, False]):
             f_c.assign(e, f_a.get_assignment(e))

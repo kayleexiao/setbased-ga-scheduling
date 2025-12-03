@@ -114,6 +114,13 @@ def generate_single_complete_schedule(problem_instance):
     # step 4: randomly assign all TUTORIALS to random TUTORIAL SLOTS
     for tutorial_id in problem_instance.get_all_tutorial_ids():
         tutorial_event = problem_instance.get_event(tutorial_id)
+
+        # Handle special lectures 851/913
+        if tutorial_event.is_special_tut:
+            slot_key = ( "TUT", "TU", "18:00" )
+            special_slot = problem_instance.get_tutorial_slot(slot_key)
+            schedule.assign(tutorial_event, special_slot)
+            continue
         
         if schedule.is_assigned(tutorial_event):
             continue  # already has partial assignment

@@ -160,8 +160,8 @@ def _check_5xx_lecures(schedule: Schedule, problem: ProblemInstance) -> int:
         #course_num = int(assign_string)
 
         if assign.is_500_course:
-            slot = schedule.get_assignment(assign)
-            slot_key = slot.slot_key 
+            slot_obj = schedule.get_assignment(assign)
+            slot_key = slot_obj.slot_key 
             lecture5xx_by_slot_key[slot_key] = lecture5xx_by_slot_key.get(slot_key, 0) + 1
 
             # if more than one 5XX lecture is scheduled in the same slot, apply penalty
@@ -170,9 +170,10 @@ def _check_5xx_lecures(schedule: Schedule, problem: ProblemInstance) -> int:
 
     return penalty
 
-# TODO: this looks suspicous
+# TODO: this looks suspicous -- rn im gonna change this signature and rewrite it.
+   # its cuz this never checks for tutoprials? and slot object issue
 # checks C9 : for all tutorials, should be booked in a DIFFERENT slot than lecture of same section
-def _check_tutorials_section_diff_from_lecture(schedule: Schedule, problem: ProblemInstance) -> int:
+def _check_tutorials_section_diff_from_lecturev1(schedule: Schedule, problem: ProblemInstance) -> int:
     """
     Check same section tutorial is assigned to a different slot than its lecture
     Example: CPSC 231 LEC 01 TUT 01 -> Mo, 10:00
@@ -206,7 +207,7 @@ def _check_tutorials_section_diff_from_lecture(schedule: Schedule, problem: Prob
             continue
         else:
             lec = [s for s in slots if isinstance(s, LectureSlot)]
-            tut = [s for s in slots if isinstance(s, TutorialSlot)]
+            tut = [s for s in slots if isinstance(s, TutorialSlot)] #this would always be empty?
 
             # only tutorials at time slot
             if not lec:
@@ -222,6 +223,38 @@ def _check_tutorials_section_diff_from_lecture(schedule: Schedule, problem: Prob
 
     return penalty
 
+def _check_tutorials_section_diff_from_lecture(schedule: Schedule, problem: ProblemInstance) -> int:
+    penalty = 0
+    
+    # Map: (program_code, course_no, section_no) -> list of (event, slot)
+    sections = {}
+
+    for event, slot in schedule.assignments.items():
+        key = (event.program_code, event.course_no, event.section_label)
+
+        if key not in sections:
+            sections[key] = []
+        sections[key].append((event, slot))
+
+    # Now check for conflicts: LEC slot cannot equal TUT slot for same section
+    for key, items in sections.items():
+        lec_slots = []
+        tut_slots = []
+
+        for event, slot in items:
+            if event.is_lecture():
+                lec_slots.append(slot)
+            elif event.is_tutorial():
+                tut_slots.append(slot)
+
+        # Compare
+        for lec in lec_slots:
+            for tut in tut_slots:
+                # if day and start_time match → conflict
+                if lec.day == tut.day and lec.start_time == tut.start_time:
+                    penalty += PEN_HARD
+    
+    return penalty
 
 # checks C2 : for all in notcompatible, they are assigned to different slots (can be lecture/tutorials)
 def _check_not_compatible(schedule: Schedule, problem: ProblemInstance) -> int:

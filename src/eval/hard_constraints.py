@@ -99,6 +99,7 @@ def _events_in_slot(schedule: Schedule, slot_key: SlotKey):
 #   - C8 : no more than tutorial_max assigned to a tutorial slot
 #   - C14 : no more than al_lecture_max assigned to a lecture slot
 #   - C15 : no more than al_tutorial_max assigned to a tutorial slot
+# TODO: this doesnt check min but im assuming thats handled in the soft constraints (eval)? but @jacob plz follow up
 def _check_capacity(schedule: Schedule, problem: ProblemInstance) -> int:
     """
     Check lecture/tutorial AND Active Learning capacity constraints. (Not too many classes in one slot)
@@ -387,6 +388,8 @@ def _check_active_learning_requirements(schedule: Schedule, problem: ProblemInst
 #        - class will exist if CPSC 351 exists
 #    - C13 : CPSC 913 is scheudled at (Tu, 18:00) AND no overlap with CPSC 413
 #        - class will exist if CPSC 413 exists
+# notes: lowkey naming conventions here are ugly due to the changes but if it aint broke dont fix it i guess
+  # (TODO: note to steph to maybe make this better later;)
 def _check_evening_rules(schedule: Schedule, problem: ProblemInstance) -> int:
     """
     Check evening-related hard constraints:

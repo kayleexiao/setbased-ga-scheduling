@@ -160,7 +160,8 @@ def _check_5xx_lecures(schedule: Schedule, problem: ProblemInstance) -> int:
         #course_num = int(assign_string)
 
         if assign.is_500_course:
-            slot_key = schedule.get_assignment(assign)
+            slot = schedule.get_assignment(assign)
+            slot_key = slot.slot_key 
             lecture5xx_by_slot_key[slot_key] = lecture5xx_by_slot_key.get(slot_key, 0) + 1
 
             # if more than one 5XX lecture is scheduled in the same slot, apply penalty
@@ -169,7 +170,7 @@ def _check_5xx_lecures(schedule: Schedule, problem: ProblemInstance) -> int:
 
     return penalty
 
-
+# TODO: this looks suspicous
 # checks C9 : for all tutorials, should be booked in a DIFFERENT slot than lecture of same section
 def _check_tutorials_section_diff_from_lecture(schedule: Schedule, problem: ProblemInstance) -> int:
     """
@@ -384,7 +385,10 @@ def _check_evening_rules(schedule: Schedule, problem: ProblemInstance) -> int:
             course, code = parts[0], parts[1]
 
             # check if evening slot even exists first
-            if problem.get_slot(schedule.get_assignment(assign)) is None:
+            assigned_slot = schedule.get_assignment(assign)
+            slot_key = assigned_slot.slot_key
+
+            if problem.get_slot(slot_key) is None:
                 penalty += PEN_HARD
                 continue
 

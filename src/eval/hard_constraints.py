@@ -226,7 +226,7 @@ def _check_tutorials_section_diff_from_lecturev1(schedule: Schedule, problem: Pr
 def _check_tutorials_section_diff_from_lecture(schedule: Schedule, problem: ProblemInstance) -> int:
     penalty = 0
     
-    # Map: (program_code, course_no, section_no) -> list of (event, slot)
+    # map: (program_code, course_no, section_no) -> list of (event, slot)
     sections = {}
 
     for event, slot in schedule.assignments.items():
@@ -236,7 +236,7 @@ def _check_tutorials_section_diff_from_lecture(schedule: Schedule, problem: Prob
             sections[key] = []
         sections[key].append((event, slot))
 
-    # Now check for conflicts: LEC slot cannot equal TUT slot for same section
+    # check for conflicts:
     for key, items in sections.items():
         lec_slots = []
         tut_slots = []
@@ -247,10 +247,10 @@ def _check_tutorials_section_diff_from_lecture(schedule: Schedule, problem: Prob
             elif event.is_tutorial():
                 tut_slots.append(slot)
 
-        # Compare
+        # compare
         for lec in lec_slots:
             for tut in tut_slots:
-                # if day and start_time match → conflict
+                # if day and start_time match = conflict
                 if lec.day == tut.day and lec.start_time == tut.start_time:
                     penalty += PEN_HARD
     
@@ -335,8 +335,8 @@ def _check_partial_assignments(schedule: Schedule, problem: ProblemInstance) -> 
                 partial_slot_key = problem.get_tutorial_slot(partial.slot_key)
 
             # check assigned slot matches partial assignment
-            assigned_slot_key = schedule.get_assignment(event_id)
-            if assigned_slot_key != partial_slot_key:
+            assigned_slot = schedule.get_assignment(event_id)
+            if assigned_slot.slot_key != partial_slot_key.slot_key: # fixed this to compare tuples instead of objects (memory issue)
                 penalty += PEN_HARD
 
         # course is not in schedule, apply penalty
@@ -523,6 +523,7 @@ def _check_department_blackout(schedule: Schedule, problem: ProblemInstance) -> 
 # Public API
 # ------------
 
+# TODO: idk if we wanna change this to match the proposal and check all the Pass functions... 
 def Valid(schedule: Schedule, problem: ProblemInstance) -> int:
     """
     Valid(schedule) - MAIN hard constraint function that adds up all hard constraint violations
@@ -548,20 +549,28 @@ def PassLectures(schedule: Schedule, problem: ProblemInstance) -> bool:
     """
     Returns True if the schedule passes all hard constraints
     related to lectures.
-
-    Right now: just checks if the WHOLE schedule is valid.
     """
-    return Valid(schedule, problem) == 0
+    return (
+        _check_capacity(schedule, problem) == 0 and
+        _check_5xx_lecures(schedule, problem) == 0 and
+        _check_evening_rules(schedule, problem) == 0 and
+        _check_department_blackout(schedule, problem) == 0 and
+        _check_unwanted(schedule, problem) == 0 and
+        _check_partial_assignments(schedule, problem) == 0
+    )
 
 
 def PassTutorials(schedule: Schedule, problem: ProblemInstance) -> bool:
     """
     Returns True if the schedule passes all hard constraints
     related to tutorials.
-
-    Right now: just checks if the WHOLE schedule is valid.
     """
-    return Valid(schedule, problem) == 0
+    return (
+        _check_capacity(schedule, problem) == 0 and
+        _check_tutorials_section_diff_from_lecture(schedule, problem) == 0 and
+        _check_unwanted(schedule, problem) == 0 and
+        _check_partial_assignments(schedule, problem) == 0
+    )
 
 
 def PassAL(schedule: Schedule, problem: ProblemInstance) -> bool:

@@ -4,7 +4,7 @@ import sys
 # Require a filename as a command-line argument
 if len(sys.argv) < 2:
     print("Error: Please provide an input file.\n")
-    print("Usage: python test_ga.py <input_file>")
+    print("Usage: python src/ga_driver.py <input_file>")
     sys.exit(1)
 
 TESTFILE = sys.argv[1]
@@ -29,11 +29,8 @@ from eval.hard_constraints import Valid, _check_5xx_lectures, _check_5xx_time_ov
 from eval.eval import eval as soft_eval
 
 
-def test_ga():
+def start_search():
     input_path = os.path.join(ROOT, "input", TESTFILE)
-
-    print("=== PARSING INPUT FILE ===")
-    print(f"Using test input: {input_path}\n")
 
     args = [
         input_path,
@@ -42,28 +39,12 @@ def test_ga():
     ]
 
     problem = parse_from_command_line(args)
-    print(f"Loaded Problem: {problem.name}\n")
-    print(problem.course_list.keys())
-    print(problem.tut_list.keys())
 
     ga = GeneticAlgorithm(problem)
     best_schedule, best_soft, best_hard = ga.run(print_interval=200)
 
     from eval.hard_constraints import debug_all_hard_constraints
     debug_all_hard_constraints(best_schedule, problem)
-
-    # print("\n=== RAW HARD CHECK CONTRIBUTIONS ===")
-    # print("capacity:", _check_capacity(best_schedule, problem))
-    # print("not_compatible:", _check_not_compatible(best_schedule, problem))
-    # print("unwanted:", _check_unwanted(best_schedule, problem))
-    # print("partial:", _check_partial_assignments(best_schedule, problem))
-    # print("AL:", _check_active_learning_requirements(best_schedule, problem))
-    # print("evening:", _check_evening_rules(best_schedule, problem))
-    # print("blackout:", _check_department_blackout(best_schedule, problem))
-    # print("5xx lec:", _check_5xx_lectures(best_schedule, problem))
-    # print("5xx overlap:", _check_5xx_time_overlap(best_schedule, problem))
-    # print("tutorial mismatch:", _check_tutorials_section_diff_from_lecture(best_schedule, problem))
-
 
     print("=== BEST SCHEDULE RESULTS ===")
     print(f"Hard violations   : {best_hard}")
@@ -143,4 +124,4 @@ def print_schedule_formatted(schedule, problem):
 
 
 if __name__ == "__main__":
-    test_ga()
+    start_search()

@@ -1,3 +1,4 @@
+import math
 import random
 from eval.eval import eval as soft_eval
 from eval.hard_constraints import (
@@ -17,22 +18,23 @@ class GeneticAlgorithm:
     def __init__(
         self,
         problem_instance,
-        population_size=250,
-        max_generations=50000,
         max_valid_solutions=1,
-        plateau_limit=50000,
         p_mutation=0.5,
         w_hard=3000,
         w_soft=1
-    ):
+    ):  
         self.problem = problem_instance
-        self.population_size = population_size
-        self.max_generations = max_generations
         self.max_valid_solutions = max_valid_solutions
-        self.plateau_limit = plateau_limit
         self.p_mutation = p_mutation
         self.w_hard = w_hard
         self.w_soft = w_soft
+        
+        scaled_max_gen, scaled_plateau, scaled_population_size = self.scale_bounding_parameters()
+        
+        # bounding parameters
+        self.population_size = scaled_population_size
+        self.max_generations = scaled_max_gen
+        self.plateau_limit = scaled_plateau
 
         # mutation mapping for fallback
         self.all_mutations = {
@@ -127,9 +129,9 @@ class GeneticAlgorithm:
                 print("\n[GA] Plateau reached — terminating.")
                 break
 
-            # terminate early if valid schedule found
-            if best_valid == 0:
-                print(f"[GA] VALID schedule found at generation {self.generation}")
+            # terminate early if optimal is schedule found
+            if best_fitness == 1.0:
+                print(f"\n[GA] Optimal schedule found at generation {self.generation}")
                 break
 
             # maintain population size
@@ -217,6 +219,10 @@ class GeneticAlgorithm:
             if population[0] != elite:
                 population[-1] = elite
 
+        # debug print, if max generation limit was reached
+        else:
+            print("\n[GA] Maximum generations reached — terminating.")
+
         # ==========================================================
         # Best valid schedule
         # ==========================================================
@@ -258,3 +264,21 @@ class GeneticAlgorithm:
             return random.choice(failing)
 
         return random.choice(list(self.all_mutations.keys()))
+    
+
+    def scale_bounding_parameters(self):
+
+        # getting problem size
+        events_count = len(self.problem.get_all_event_ids())
+        slots_count = (len(self.problem.get_all_lecture_slot_keys()) + len(self.problem.get_all_tutorial_slot_keys()))
+
+        # scaling the bounding parameters based on the problem size
+        max_generations = max(50000, int(300 * events_count * math.log(slots_count + 1))) # minimum bound of 50k max generations, log is used to avoid extreme growth
+        plateau_limit = max(50000, int(20 * events_count)) # minimum plateau limit of 50k, problem size increases the limit linearly
+        population_size = population_size = max(250, min(500, int(events_count * 5))) # population size between 250 and 500, scales linearly with problem size
+
+        print(f"\n[GA] Search Bounds | max_generations={max_generations}, plateau_limit={plateau_limit}, population_size={population_size}")
+
+        return max_generations, plateau_limit, population_size
+
+

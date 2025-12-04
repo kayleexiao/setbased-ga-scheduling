@@ -29,9 +29,8 @@ class GeneticAlgorithm:
         self.w_hard = w_hard
         self.w_soft = w_soft
         
+        # scale bounding parameters based on problem size
         scaled_max_gen, scaled_plateau, scaled_population_size = self.scale_bounding_parameters()
-        
-        # bounding parameters
         self.population_size = scaled_population_size
         self.max_generations = scaled_max_gen
         self.plateau_limit = scaled_plateau
@@ -196,6 +195,9 @@ class GeneticAlgorithm:
                 # crossover
                 p1 = self.tournament(population)
                 p2 = self.tournament(population)
+                while p2 == p1: # ensuring two unique parents are selected
+                    p2 = self.tournament(population)
+
 
                 # build new schedule by combining parents
                 child = crossover(p1, p2)

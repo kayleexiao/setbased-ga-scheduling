@@ -211,3 +211,115 @@ def purge(population, k):
 
     # return population without the bottom k schedules
     return population[k:]
+
+# Fix 5xx lecture collisions
+# Moves one out of an overloaded slot
+def mutate_500_conflict(schedule, slots, problem):
+
+    # Collect all 5xx lectures per slot
+    slot_to_5xx = {}
+    for ev, slot in schedule.assignments.items():
+        if ev.is_500_course and ev.is_lecture():
+            slot_to_5xx.setdefault(slot.slot_key, []).append((ev, slot))
+
+    # Find a slot containing more than 1 5xx lecture
+    offenders = [(slot_key, items)
+                 for slot_key, items in slot_to_5xx.items()
+                 if len(items) > 1]
+    
+    # If no overloaded slot exists, mutation does nothing
+    if not offenders:
+        return None
+
+    # Randomly pick one conflicting slot to operate one
+    slot_key, items = random.choice(offenders)
+
+    # Chose one of the 5xx lectures causing violation
+    ev_to_move, current_slot = random.choice(items)
+
+    # Make list of valid slots
+    legal_targets = [
+        s for s in slots
+
+        # same slot type
+        if isinstance(s, type(current_slot))   
+
+        # different slot
+        and s.slot_key != current_slot.slot_key
+
+        # AL restrictions
+        and (not ev_to_move.al_required or s.al_lecture_max > 0) 
+
+        # evening restrictions
+        and (not ev_to_move.is_evening_event or s.is_evening_slot)  
+    ]
+
+    # No legal alternative, abort mutation
+    if not legal_targets:
+        return None  # Can't move — mutation fails
+
+    # Choose a new slot randomly
+    new_slot = random.choice(legal_targets)
+
+    # Create modified schedule object with updated assignment
+    new_assignments = schedule.assignments.copy()
+    new_assignments[ev_to_move] = new_slot
+
+    return Schedule(assignments=new_assignments)
+
+# Find one conflicting non-compatible pair and move one of the events
+def mutate_notcompatible(schedule, slots, problem):
+
+    # Copy schedule
+    new = Schedule(assignments=schedule.assignments.copy())
+    
+    # Find all not-compatible conflicts
+    conflicts = []
+    for nc in problem.not_compatible:
+
+        # Get both events
+        evA = problem.get_event(nc.event_a_id)
+        evB = problem.get_event(nc.event_b_id)
+
+        # Only operate if both are in same slot
+        if not (new.is_assigned(evA) and new.is_assigned(evB)):
+            continue
+
+        # Get their slot assignments
+        sA = new.get_assignment(evA)
+        sB = new.get_assignment(evB)
+
+        # Verify conflict
+        if sA.day == sB.day and sA.start_time == sB.start_time:
+            conflicts.append((evA, evB))
+
+    # Stop mutation if no violations
+    if not conflicts:
+        return None
+
+    # Choose one conflicting pair
+    evA, evB = random.choice(conflicts)
+
+    # Randomly pick which event to move
+    ev_to_move = random.choice([evA, evB])
+    old_slot = new.get_assignment(ev_to_move)
+
+    # Build the list of compatible slots
+    possible_slots = [
+        s for s in slots
+
+        # Same slot type
+        if (s.kind == old_slot.kind) and
+            # Different time
+            not (s.day == old_slot.day and s.start_time == old_slot.start_time)
+    ]
+
+    # Cancel mutation if there is nowhere to move event
+    if not possible_slots:
+        return None
+
+    # Move event to non-conflicting slot
+    new.assign(ev_to_move, random.choice(possible_slots))
+    return new
+
+

@@ -145,31 +145,29 @@ def _check_capacity(schedule: Schedule, problem: ProblemInstance) -> int:
 
     return penalty
 
-
-# checks C5 : for all 5XX lectures, they should be scheduled into different slots
-#       - a slot should only have ONE 5XX course
-def _check_5xx_lecures(schedule: Schedule, problem: ProblemInstance) -> int:
+def _check_5xx_lectures(schedule: Schedule, problem: ProblemInstance) -> int:
     """
-    Iterates through ALL 5XX lectures in the schedule to make sure if each is assigned to a different slot
+    C5: 500-level lecture conflict
+    A slot may contain at most ONE 500-level LEC (tutorials do NOT count)
     """
     penalty = 0
-    lecture5xx_by_slot_key = {}
+    lecture5xx_by_slot = {}
 
-    for assign in schedule.assignments:
-        # isolating lecture number in each assignment and adding to lecture5XX_by_slot_key
-        #assign_string = str(assign).split()[1]
-        #course_num = int(assign_string)
+    for ev, slot in schedule.assignments.items():
 
-        if assign.is_500_course:
-            slot_obj = schedule.get_assignment(assign)
-            slot_key = slot_obj.slot_key 
-            lecture5xx_by_slot_key[slot_key] = lecture5xx_by_slot_key.get(slot_key, 0) + 1
+        # Only consider events that are both 5xx and a lecture
+        if ev.is_500_course and ev.is_lecture(): 
+            key = slot.slot_key
 
-            # if more than one 5XX lecture is scheduled in the same slot, apply penalty
-            if lecture5xx_by_slot_key[slot_key] > 1:
+            # Increment counter of 5xx lects in slot
+            lecture5xx_by_slot[key] = lecture5xx_by_slot.get(key, 0) + 1
+
+            # If more than one 5xx in slot, violation
+            if lecture5xx_by_slot[key] > 1:
                 penalty += PEN_HARD
 
     return penalty
+
 
 # TODO: this looks suspicous -- rn im gonna change this signature and rewrite it.
    # its cuz this never checks for tutoprials? and slot object issue
@@ -520,6 +518,199 @@ def _check_department_blackout(schedule: Schedule, problem: ProblemInstance) -> 
 
     return penalty
 
+# 5xx lectures must also be in non overlapping times 
+def _check_5xx_time_overlap(schedule: Schedule, problem: ProblemInstance) -> int:
+    penalty = 0
+    five_hundreds = []
+
+    # Collect all 5xx lects and their slot
+    for ev, slot in schedule.assignments.items():
+        if ev.is_500_course and ev.is_lecture():
+            five_hundreds.append((ev, slot))
+
+    # Compare every pair for time overlap
+    for i in range(len(five_hundreds)):
+        ev1, s1 = five_hundreds[i]
+        for j in range(i + 1, len(five_hundreds)):
+            ev2, s2 = five_hundreds[j]
+
+            # Overlap means same day and same start time
+            if s1.day == s2.day and s1.start_time == s2.start_time:
+                penalty += PEN_HARD
+
+    return penalty
+
+# Prints detailed violations of hc
+# These do raw logical checks
+# Is useful 90% of the time, but sometimes doesnt pick up a violation
+# Theres a back up checker in the ga test class
+def debug_all_hard_constraints(schedule: Schedule, problem: ProblemInstance):
+
+        print("\n================ HARD CONSTRAINT DEBUG ================\n")
+
+        counts = {
+        "C1_capacity": 0,
+        "C8_capacity_AL": 0,
+        "C14_C15_tutorial_capacity": 0,
+        "C2_not_compatible": 0,
+        "C3_partial_assign": 0,
+        "C4_unwanted": 0,
+        "C5_500_level": 0,
+        "C9_tutorial_same_slot": 0,
+        "C11_evening_wrong_slot": 0,
+        "C12_13_special_tut_rules": 0,
+        "C6_dept_blackout": 0,
+        }
+
+        print("---- C1/C8/C14/C15: Capacity ------------------------")
+
+        for slot_key, slot in problem.lec_slots_by_key.items():
+            events_here = [e for e, s in schedule.assignments.items() if s.slot_key == slot_key]
+            lec = [e for e in events_here if e.is_lecture()]
+            al_lec = [e for e in lec if e.al_required]
+
+            if len(lec) > slot.lecture_max:
+                counts["C1_capacity"] += 1
+                print(f"[Capacity] {slot}: {len(lec)} lectures > max {slot.lecture_max}")
+                for e in lec:
+                    print(f"   - {e.id}")
+
+            if len(al_lec) > slot.al_lecture_max:
+                counts["C8_capacity_AL"] += 1
+                print(f"[Capacity AL] {slot}: {len(al_lec)} AL-lectures > max {slot.al_lecture_max}")
+                for e in al_lec:
+                    print(f"   - {e.id}")
+
+        for slot_key, slot in problem.tut_slots_by_key.items():
+            events_here = [e for e, s in schedule.assignments.items() if s.slot_key == slot_key]
+            tut = [e for e in events_here if e.is_tutorial()]
+            al_tut = [e for e in tut if e.al_required]
+
+            if len(tut) > slot.tutorial_max:
+                counts["C14_C15_tutorial_capacity"] += 1
+                print(f"[Capacity] {slot}: {len(tut)} tutorials > max {slot.tutorial_max}")
+                for e in tut:
+                    print(f"   - {e.id}")
+
+            if len(al_tut) > slot.al_tutorial_max:
+                counts["C8_capacity_AL"] += 1
+                print(f"[Capacity AL] {slot}: {len(al_tut)} AL-tutorials > max {slot.al_tutorial_max}")
+                for e in al_tut:
+                    print(f"   - {e.id}")
+
+        print("\n---- C2: NotCompatible ------------------------------")
+
+        for nc in problem.not_compatible:
+            a = problem.get_event(nc.event_a_id)
+            b = problem.get_event(nc.event_b_id)
+            if not (schedule.is_assigned(a) and schedule.is_assigned(b)):
+                continue
+
+            sa = schedule.get_assignment(a)
+            sb = schedule.get_assignment(b)
+
+            if sa.day == sb.day and sa.start_time == sb.start_time:
+                counts["C2_not_compatible"] += 1
+                print(f"[NotCompatible] {a.id} and {b.id} both scheduled at {sa}")
+
+
+        print("\n---- C3: Partial Assignments -------------------------")
+
+        for pa in problem.partial_assignments:
+            ev = problem.get_event(pa.event_id)
+            if not schedule.is_assigned(ev):
+                counts["C3_partial_assign"] += 1
+                print(f"[PartialAssign] {ev.id} **not scheduled**")
+                continue
+
+            assigned = schedule.get_assignment(ev)
+
+            expected = (problem.get_lecture_slot(pa.slot_key)
+                        if pa.slot_key[0] == "LEC"
+                        else problem.get_tutorial_slot(pa.slot_key))
+
+            if assigned != expected:
+                counts["C3_partial_assign"] += 1
+                print(f"[PartialAssign] {ev.id}: assigned {assigned}, expected {expected}")
+
+
+        print("\n---- C4: Unwanted -----------------------------------")
+
+        for uw in problem.unwanted:
+            ev = problem.get_event(uw.event_id)
+            if not schedule.is_assigned(ev):
+                continue
+            assigned = schedule.get_assignment(ev)
+            if assigned.slot_key == uw.slot_key:
+                counts["C4_unwanted"] += 1
+                print(f"[Unwanted] {ev.id} assigned to forbidden slot {assigned}")
+
+        print("\n---- C5: 500-level conflicts ------------------------")
+
+        slot_to_5xx = {}
+
+        for ev, slot in schedule.assignments.items():
+            if ev.is_500_course and ev.is_lecture():
+                slot_key = slot.slot_key
+                slot_to_5xx.setdefault(slot_key, []).append((ev, slot))
+
+        for slot_key, items in slot_to_5xx.items():
+            if len(items) > 1:
+                counts["C5_500_level"] += 1
+                print(f"[C5] Slot {slot_key} has {len(items)} 500-level courses:")
+                for ev, s in items:
+                    print(f"   - {ev.id} @ {s.day} {s.start_time}")
+
+
+        print("\n---- C9: Tutorial Same Slot as Lecture --------------")
+
+        for ev, slot in schedule.assignments.items():
+            if ev.is_tutorial() and ev.section_label:
+                course_key = ev.get_course_key()
+                for lec_id in problem.course_list.get(course_key, []):
+                    lec_ev = problem.get_event(lec_id)
+                    lec_slot = schedule.get_assignment(lec_ev)
+                    if lec_slot.day == slot.day and lec_slot.start_time == slot.start_time:
+                        counts["C9_tutorial_same_slot"] += 1
+                        print(f"[C9] Tutorial {ev.id} shares slot with lecture {lec_ev.id}: {slot}")
+
+        print("\n---- C11–C13: Evening Rules --------------------------")
+
+        for ev, slot in schedule.assignments.items():
+
+            if ev.is_evening_event and not slot.is_evening_slot:
+                counts["C11_evening_wrong_slot"] += 1
+                print(f"[C11] Evening lecture {ev.id} in NON-evening slot: {slot}")
+
+            if ev.is_special_tut:
+                if slot.day != "TU" or slot.start_time != "18:00":
+                    counts["C12_13_special_tut_rules"] += 1
+                    print(f"[C12/13] Special tutorial {ev.id} in wrong slot: {slot}")
+
+                related = ("CPSC", 351) if ev.course_no == 851 else ("CPSC", 413)
+                for rid in problem.course_list.get(related, []):
+                    r_ev = problem.get_event(rid)
+                    r_slot = schedule.get_assignment(r_ev)
+                    if r_slot.day == slot.day and r_slot.start_time == slot.start_time:
+                        counts["C12_13_special_tut_rules"] += 1
+                        print(f"[C12/13] {ev.id} overlaps with {r_ev.id} at {slot}")
+
+        print("\n---- C6: Department Blackout -------------------------")
+
+        for ev, slot in schedule.assignments.items():
+            if ev.is_lecture() and slot.day == "TU" and slot.start_time == "11:00":
+                counts["C6_dept_blackout"] += 1
+                print(f"[C6] Lecture {ev.id} scheduled in forbidden TU 11:00 slot")
+
+        print("\n================ END HARD CONSTRAINT DEBUG ================\n")
+
+        print("===== HARD CONSTRAINT SUMMARY COUNTS =====")
+        for k, v in counts.items():
+            print(f"{k}: {v}")
+        print("===========================================\n")
+
+        return counts
+
 
 
 # ------------
@@ -543,7 +734,8 @@ def Valid(schedule: Schedule, problem: ProblemInstance) -> int:
     penalty += _check_active_learning_requirements(schedule, problem)
     penalty += _check_evening_rules(schedule, problem)
     penalty += _check_department_blackout(schedule, problem)
-    penalty += _check_5xx_lecures(schedule, problem)
+    penalty += _check_5xx_lectures(schedule, problem)
+    penalty += _check_5xx_time_overlap(schedule, problem)
     penalty += _check_tutorials_section_diff_from_lecture(schedule, problem)
     return penalty
 
@@ -555,7 +747,9 @@ def PassLectures(schedule: Schedule, problem: ProblemInstance) -> bool:
     """
     return (
         _check_capacity(schedule, problem) == 0 and
-        _check_5xx_lecures(schedule, problem) == 0 and
+        _check_5xx_lectures(schedule, problem) == 0 and
+        _check_not_compatible(schedule, problem) == 0 and
+        _check_5xx_time_overlap(schedule, problem) == 0 and
         _check_evening_rules(schedule, problem) == 0 and
         _check_department_blackout(schedule, problem) == 0 and
         _check_unwanted(schedule, problem) == 0 and
@@ -570,6 +764,7 @@ def PassTutorials(schedule: Schedule, problem: ProblemInstance) -> bool:
     """
     return (
         _check_capacity(schedule, problem) == 0 and
+        _check_not_compatible(schedule, problem) == 0 and
         _check_tutorials_section_diff_from_lecture(schedule, problem) == 0 and
         _check_unwanted(schedule, problem) == 0 and
         _check_partial_assignments(schedule, problem) == 0

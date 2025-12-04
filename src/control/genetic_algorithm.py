@@ -1,14 +1,15 @@
 import random
 from eval.eval import eval as soft_eval
 from eval.hard_constraints import (
-    Valid, PassEvening, PassAL, PassLectures, PassTutorials
+    Valid, PassEvening, PassAL, PassLectures, PassTutorials, _check_5xx_lectures, _check_capacity, _check_not_compatible
 )
 from eval.selection import fitness, probability, running_sum
 from model.initial_state import generate_initial_state
 from model.extension_rules import (
-    mutate_evening, mutate_AL, mutate_lecture, mutate_tutorial,
+    mutate_evening, mutate_AL, mutate_lecture, mutate_tutorial, mutate_500_conflict, mutate_notcompatible,
     crossover, purge
 )
+from control.repair import repair_schedule
 
 
 class GeneticAlgorithm:
@@ -16,10 +17,10 @@ class GeneticAlgorithm:
     def __init__(
         self,
         problem_instance,
-        population_size=150,
-        max_generations=20000,
+        population_size=250,
+        max_generations=50000,
         max_valid_solutions=1,
-        plateau_limit=20000,
+        plateau_limit=50000,
         p_mutation=0.5,
         w_hard=3000,
         w_soft=1
@@ -39,6 +40,9 @@ class GeneticAlgorithm:
             "al": mutate_AL,
             "lecture": mutate_lecture,
             "tutorial": mutate_tutorial,
+
+            "500fix": lambda s, sl: mutate_500_conflict(s, sl, self.problem),
+            "notcompat": lambda s, sl: mutate_notcompatible(s, sl, self.problem),
         }
 
         # counters
@@ -47,17 +51,24 @@ class GeneticAlgorithm:
         self.valid_found = 0
 
     # Tournament selection
-    def tournament(self, population, k=4):
-        competitors = random.sample(population, k)
-        competitors.sort(key=lambda x: x[2], reverse=True)
-        return competitors[0][0]  # return schedule only
+    def tournament(self, population, k=25):
 
+        # randomly pick k candidates from population
+        competitors = random.sample(population, k)
+
+        # sort them by fitness (3rd item in tuple)
+        competitors.sort(key=lambda x: x[2], reverse=True)
+
+        # return only the schedule object of the winner
+        return competitors[0][0] 
 
     # =====================================================================
     # Main GA
     # =====================================================================
     def run(self, print_interval=50):
         print("\n=== GENERATING INITIAL POPULATION ===")
+
+        # build initial population with weighted hard/soft evaluation
         population = generate_initial_state(
             self.problem,
             self.population_size,
@@ -65,6 +76,7 @@ class GeneticAlgorithm:
             w_soft=self.w_soft
         )
 
+        # Convert evals to probs
         population = probability(running_sum(population))
         best_fitness_before = None
 
@@ -75,13 +87,19 @@ class GeneticAlgorithm:
         # ==========================================================
         for self.generation in range(self.max_generations):
 
-            # sort population
+            # sort individuals by fitness
             population.sort(key=lambda x: x[2], reverse=True)
+
+            # current best individual
             elite = population[0]
+
+            # unpack fields
             best_schedule, best_eval, best_fitness, _ = elite
+
+            # hard penalty count
             best_valid = Valid(best_schedule, self.problem)
 
-            # progress print
+            # Periodically print progress
             if self.generation % print_interval == 0:
                 print(
                     f"[gen {self.generation:4d}] "
@@ -93,16 +111,23 @@ class GeneticAlgorithm:
             # plateau logic
             if best_fitness_before is not None:
                 if best_fitness <= best_fitness_before:
+
+                    # stagnation detected
                     self.plateau_counter += 1
+
                 else:
+
+                    # improvement resets counter
                     self.plateau_counter = 0
+
             best_fitness_before = best_fitness
 
+            # terminate if no improvement for plateau_limit generations
             if self.plateau_counter >= self.plateau_limit:
                 print("\n[GA] Plateau reached — terminating.")
                 break
 
-            # found valid schedule
+            # terminate early if valid schedule found
             if best_valid == 0:
                 print(f"[GA] VALID schedule found at generation {self.generation}")
                 break
@@ -116,7 +141,8 @@ class GeneticAlgorithm:
 
             # Extensions
             if random.random() < self.p_mutation:
-                # mutation
+
+                # select parent
                 parent = self.tournament(population)
 
                 # Decide which mutation to use
@@ -129,9 +155,11 @@ class GeneticAlgorithm:
                         f"AL={PassAL(parent, self.problem)}, "
                         f"Lect={PassLectures(parent, self.problem)}, "
                         f"Tut={PassTutorials(parent, self.problem)})")
-
+                    
+                # mutation function
                 mut_fn = self.all_mutations[mut_type]
 
+                # all possible slot options
                 all_slots = (
                     list(self.problem.lec_slots_by_key.values()) +
                     list(self.problem.tut_slots_by_key.values())
@@ -140,29 +168,38 @@ class GeneticAlgorithm:
                 child = None
                 attempts = 0
 
-                # Try a few times with the chosen type
-                # if we get None, fall back to more generic mutation or crossover
+                # attempt mutation up to 5 times
                 while child is None and attempts < 5:
-                    child = mut_fn(parent, all_slots)
+                    candidate = mut_fn(parent, all_slots)
+                    if candidate is not None:
+                        # Run repair immediately on mutated schedule
+                        child = repair_schedule(candidate, self.problem)
                     attempts += 1
 
                 if child is None:
-                    # Fallback 
-                    # either try a generic lecture/tutorial mutation, or just do crossover as a last resort to keep search moving
+                    # fallback if requested mutation fails
                     alt_types = ["lecture", "tutorial"]
                     random.shuffle(alt_types)
 
                     for alt in alt_types:
+                        if alt not in self.all_mutations:
+                            continue
                         alt_fn = self.all_mutations[alt]
-                        child = alt_fn(parent, all_slots)
-                        if child is not None:
+                        candidate = alt_fn(parent, all_slots)
+                        if candidate is not None:
+                            child = repair_schedule(candidate, self.problem)
                             break
 
             else:
                 # crossover
                 p1 = self.tournament(population)
                 p2 = self.tournament(population)
+
+                # build new schedule by combining parents
                 child = crossover(p1, p2)
+
+                # repair any structural issues
+                child = repair_schedule(child, self.problem)
 
             # evaluate child
             child_eval = soft_eval(child, self.problem)
@@ -195,96 +232,29 @@ class GeneticAlgorithm:
 
         return best_schedule, best_eval, best_valid
     
-    # Choose which mutation sub-extension to apply
+    # Robust mutation selection 
     def choose_mutation_type(self, schedule):
-        """
-        Decide which mutation sub-extension to use based on which
-        hard-constraint categories are currently failing.
-            - Cevening   -> mutate_evening
-            - CAL        -> mutate_AL
-            - Clectures  -> mutate_lecture
-            - Ctutorials -> mutate_tutorial
-        """
-        needed = []
+        failing = []
+
+        if _check_5xx_lectures(schedule, self.problem) > 0:
+            failing.append("500fix")
+
+        if _check_not_compatible(schedule, self.problem) > 0:
+            failing.append("notcompat")
 
         if not PassEvening(schedule, self.problem):
-            needed.append("evening")
+            failing.append("evening")
 
         if not PassAL(schedule, self.problem):
-            needed.append("al")
+            failing.append("al")
 
         if not PassLectures(schedule, self.problem):
-            needed.append("lecture")
+            failing.append("lecture")
 
         if not PassTutorials(schedule, self.problem):
-            needed.append("tutorial")
+            failing.append("tutorial")
 
-        # If all hard constraint categories pass (i wish) pick random
-        if not needed:
-            needed = ["lecture", "tutorial", "evening", "al"]
+        if failing:
+            return random.choice(failing)
 
-        return random.choice(needed)
-
-    # Hard constrain debug
-    def debug_hard_constraints(self, schedule):
-
-        from eval.hard_constraints import (
-            _check_capacity,
-            _check_not_compatible,
-            _check_unwanted,
-            _check_partial_assignments,
-            _check_active_learning_requirements,
-            _check_evening_rules,
-            _check_department_blackout,
-            _check_5xx_lecures,
-            _check_tutorials_section_diff_from_lecture,
-        )
-
-        problem = self.problem
-
-        c_capacity      = _check_capacity(schedule, problem)
-        c_notcomp       = _check_not_compatible(schedule, problem)
-        c_unwanted      = _check_unwanted(schedule, problem)
-        c_partial       = _check_partial_assignments(schedule, problem)
-        c_al_req        = _check_active_learning_requirements(schedule, problem)
-        c_evening       = _check_evening_rules(schedule, problem)
-        c_blackout      = _check_department_blackout(schedule, problem)
-        c_5xx           = _check_5xx_lecures(schedule, problem)
-        c_tut_sec_diff  = _check_tutorials_section_diff_from_lecture(schedule, problem)
-
-        total = (
-            c_capacity + c_notcomp + c_unwanted + c_partial +
-            c_al_req + c_evening + c_blackout + c_5xx + c_tut_sec_diff
-        )
-
-        print("\n================ HARD CONSTRAINT DEBUG ================")
-        print(f"Total Hard Penalty = {total}\n")
-
-        print("---- C1/C8/C14/C15: Capacity ------------------------")
-        print(f"Capacity violations            : {c_capacity}")
-
-        print("\n---- C2: Not Compatible -----------------------------")
-        print(f"NotCompatible violations       : {c_notcomp}")
-
-        print("\n---- C3: Partial Assignments ------------------------")
-        print(f"Partial assignment violations  : {c_partial}")
-
-        print("\n---- C4: Unwanted -----------------------------------")
-        print(f"Unwanted violations            : {c_unwanted}")
-
-        print("\n---- C5: 500-Level Lecture Conflicts ----------------")
-        print(f"5xx lecture conflicts          : {c_5xx}")
-
-        print("\n---- C9: Tutorial Same Slot as Lecture --------------")
-        print(f"TUT same-slot-as-LEC           : {c_tut_sec_diff}")
-
-        print("\n---- C16: Active Learning ----------------------------")
-        print(f"AL requirement violations      : {c_al_req}")
-
-        print("\n---- C11–C13: Evening Rules --------------------------")
-        print(f"Evening rule violations        : {c_evening}")
-
-        print("\n---- C6: Department Blackout -------------------------")
-        print(f"Dept blackout violations       : {c_blackout}")
-
-        print("\n================ END HARD CONSTRAINT DEBUG ================\n")
+        return random.choice(list(self.all_mutations.keys()))

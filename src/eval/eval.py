@@ -101,7 +101,7 @@ def eval_pref(schedule, problem) -> int:
     return pref_penalty
 
 
-# sub eval function to get penalty for same sections in same slots 
+# sub eval function to get penalty for same sections in same slots
 # (applied once for overlapping sections)
 def eval_secdiff(schedule, problem) -> int:
     sec_penalty = 0
@@ -134,7 +134,7 @@ def eval_secdiff(schedule, problem) -> int:
     # MAYBE: change to multiplicative penalty if several sections in same slot?
     for (assign_key, slot_key), count in same_section.items():
         if count > 1:
-            sec_penalty += (problem.pen_section * count)
+            sec_penalty += (problem.pen_section * int(count / 2))
 
     return sec_penalty
 

@@ -96,11 +96,6 @@ def generate_single_complete_schedule(problem_instance):
     lecture_slots = [problem_instance.get_lecture_slot(key) for key in problem_instance.get_all_lecture_slot_keys()]
     tutorial_slots = [problem_instance.get_tutorial_slot(key) for key in problem_instance.get_all_tutorial_slot_keys()]
     
-    if not lecture_slots:
-        raise ValueError("No lecture slots available in problem instance!")
-    if not tutorial_slots:
-        raise ValueError("No tutorial slots available in problem instance!")
-    
     # step 3: randomly assign all LECTURES to random LECTURE SLOTS
     for lecture_id in problem_instance.get_all_lecture_ids():
         lecture_event = problem_instance.get_event(lecture_id)
@@ -135,25 +130,6 @@ def generate_single_complete_schedule(problem_instance):
         #-------------------------------------------------------------
     
     return schedule
-
-# function to dynamically calculate population size k based on problem complexity
-# returns population size k (int)
-def calculate_population_size(problem_instance, min_size=10, max_size=100, scale_factor=2.0):
-    num_events = len(problem_instance.get_all_event_ids())
-    num_slots = len(problem_instance.get_all_lecture_slot_keys()) + \
-                len(problem_instance.get_all_tutorial_slot_keys())
-    
-    # calculate based on problem complexity
-    # use geometric mean of events and slots for balanced scaling
-    complexity = (num_events * num_slots) ** 0.5
-    
-    # scale by factor and round to nearest integer
-    k = int(complexity * scale_factor)
-    
-    # clamp to min/max bounds
-    k = max(min_size, min(k, max_size))
-    
-    return k
 
 
 def print_population_summary(population, problem_instance):

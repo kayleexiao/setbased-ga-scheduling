@@ -249,8 +249,23 @@ def _check_tutorials_section_diff_from_lecture(schedule: Schedule, problem: Prob
         # compare
         for lec in lec_slots:
             for tut in tut_slots:
+                tut_start_time = int(tut.start_time.split(":")[0])
+                lec_start_time = int(lec.start_time.split(":")[0])
                 # if day and start_time match = conflict
-                if lec.day == tut.day and lec.start_time == tut.start_time:
+
+                if tut.day == "FR" and lec.day == "MO":
+                    tut_end_time = tut_start_time + 2
+                    if tut_start_time <= lec_start_time <= tut_end_time:
+                        penalty += PEN_HARD
+                elif tut.day == "TU" and lec.day == tut.day:
+                    tut_start_time_2 = int(tut.start_time.split(":")[1])
+                    tut_end_time = tut_start_time + tut_start_time_2 + 1.5
+                    lec_end_time = lec_start_time + 1.5
+                    if tut_start_time <= lec_start_time <= tut_end_time:
+                        penalty += PEN_HARD
+                    if lec_start_time <= tut_start_time <= lec_end_time:
+                        penalty += PEN_HARD
+                elif lec.day == tut.day and lec_start_time == tut_start_time:
                     penalty += PEN_HARD
     
     return penalty

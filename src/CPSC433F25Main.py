@@ -34,8 +34,8 @@ def start_search():
 
     args = [
         input_path,
-        "1", "0", "1", "0",
-        "10", "10", "10", "10"
+        sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5],
+        sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9]
     ]
 
     problem = parse_from_command_line(args)
@@ -52,14 +52,15 @@ def start_search():
 
     print(">> VALID schedule found!" if best_hard == 0 else ">> No valid schedule (best attempt shown).")
 
-    print_schedule_formatted(best_schedule, problem)
+    print_schedule_formatted(best_schedule, problem, best_soft)
 
 # Print the schedule grouped by lecture and its tutorials
 # Should be able to reuse this for final version
-def print_schedule_formatted(schedule, problem):
+def print_schedule_formatted(schedule, problem, eval_value):
 
     print("\n================ FORMATTED SCHEDULE ASSIGNMENT ================\n")
-
+    
+    print(f"Eval-value: {eval_value}")
 
     all_keys = set(problem.course_list.keys()) | set(problem.tut_list.keys())
     course_keys = sorted(all_keys, key=lambda k: (k[0], int(k[1])))

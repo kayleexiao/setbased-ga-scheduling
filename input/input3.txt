@@ -6,10 +6,17 @@ MO, 8:00, 3, 2, 0
 MO, 9:00, 3, 2, 1
 TU, 9:30, 2, 1, 2
 
+TU, 18:00, 4, 2, 1
+MO, 18:00, 4, 1, 0 
+
 Tutorial slots:
 MO, 8:00, 4, 2, 4
 TU, 10:00, 2, 1, 2
 FR, 10:00, 2, 1, 0
+
+TU, 9:30, 1, 1, 0
+
+MO, 18:00, 4, 1, 1
 
 Lectures:
 CPSC 231 LEC 01, true
@@ -17,11 +24,28 @@ CPSC 231 LEC 02, true
 DATA 201 LEC 01, false
 SENG 300 LEC 01, false
 
+CPSC 501 LEC 01, true
+CPSC 523 LEC 01, true
+CPSC 502 LEC 02, false
+
+CPSC 415 LEC 91, true
+
+CPSC 413 LEC 01, true
+CPSC 555 LEC 02, true
+
 Tutorials:
 CPSC 231 LEC 01 TUT 01, true
+
+CPSC 231 LEC 01 TUT 02, true
+
 CPSC 231 LEC 02 TUT 02, true
 DATA 201 LEC 01 LAB 01, false
 SENG 300 TUT 01, false
+CPSC 413 LEC 01 TUT 01, true
+CPSC 413 LEC 01 TUT 02, false
+
+CPSC 913 TUT 01, false
+CPSC 851 TUT 01, false
 
 Not compatible:
 CPSC 231 LEC 01 TUT 01, CPSC 231 LEC 02 TUT 02

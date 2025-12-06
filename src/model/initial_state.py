@@ -114,6 +114,9 @@ def generate_single_complete_schedule(problem_instance):
         if tutorial_event.is_special_tut:
             slot_key = ( "TUT", "TU", "18:00" )
             special_slot = problem_instance.get_tutorial_slot(slot_key)
+            if special_slot is None:
+                print("Special tutorial slot not found in problem instance!")
+                sys.exit(1)
             schedule.assign(tutorial_event, special_slot)
             continue
         

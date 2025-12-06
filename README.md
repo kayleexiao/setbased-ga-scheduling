@@ -1,6 +1,9 @@
 # CPSC 433 – Set-Based Genetic Algorithm Search Scheduling
 
 This repository contains our implementation of the genetic algorithms set-based search model for the CPSC 433 course scheduling project.
+<p align="center">
+  <img src="./AHTURTWIG.gif" width="200">
+</p>
 
 ## Group Members: Team Turtwig
 
@@ -37,4 +40,18 @@ tests/      # small local tests for parser, eval, search components, etc.
 - `feature/eval-main`: eval function and all soft-constraint subfunctions
 - `feature/control-main`: search rules, schedule generation, and set-based search control logic
 - `feature/output-main`: printing final schedules in required format
+
+## Final Report: Schedules Stabilized (For Now)
+
+<p align="center">
+All time slots filled. Constraints negotiated; schedules stabilized (mostly).<br>
+Unfortunately, a few students were indeed sacrificed to 8am lectures in the making of schedules.
+</p>
+
+
+<p align="center">
+  <br><br><img src="./TURTWIG.gif" width="150"><br><br>
+  <strong>Team Turtwig</strong><br>
+  <em>signing out.</em>
+</p>
 

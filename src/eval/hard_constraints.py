@@ -42,7 +42,7 @@ AL CONSTRAINTS
     - C16 : for all in active_learning, lecture/tutorial is assigned to an AL slot
 """
 
-from typing import Tuple, Dict
+from typing import Tuple
 from collections import defaultdict
 
 from model.schedule import Schedule

@@ -11,7 +11,6 @@ from model.schedule import Schedule
 from eval.eval import eval
 from eval.hard_constraints import Valid
 from eval.selection import fitness
-from control.repair import repair_schedule
 
 def generate_initial_state(problem_instance, k, w_hard=10, w_soft=1, seed=None):
     """
@@ -111,7 +110,7 @@ def generate_single_complete_schedule(problem_instance):
     for tutorial_id in problem_instance.get_all_tutorial_ids():
         tutorial_event = problem_instance.get_event(tutorial_id)
 
-        # Handle special lectures 851/913
+        # handle special lectures 851/913
         if tutorial_event.is_special_tut:
             slot_key = ( "TUT", "TU", "18:00" )
             special_slot = problem_instance.get_tutorial_slot(slot_key)
@@ -125,10 +124,6 @@ def generate_single_complete_schedule(problem_instance):
         random_slot = random.choice(tutorial_slots)
         schedule.assign(tutorial_event, random_slot)
 
-        #-------------------------------------------------------------
-        # We COULD add the repair schedule function here if need be
-        #-------------------------------------------------------------
-    
     return schedule
 
 

@@ -1,8 +1,3 @@
-from collections import defaultdict
-from model.schedule import Schedule
-from parser.problem_instance import ProblemInstance
-from parser.slot import LectureSlot, TutorialSlot
-from eval.eval import eval, eval_pref, eval_pair, eval_minfilled, eval_secdiff
 from eval.hard_constraints import Valid
 
 """

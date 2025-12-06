@@ -1,6 +1,5 @@
 import random
 from .schedule import Schedule
-from parser.event import Event
 from parser.constants import *
 
 # Special event helper

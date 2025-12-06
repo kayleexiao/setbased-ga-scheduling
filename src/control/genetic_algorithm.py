@@ -2,7 +2,7 @@ import math
 import random
 from eval.eval import eval as soft_eval
 from eval.hard_constraints import (
-    Valid, PassEvening, PassAL, PassLectures, PassTutorials, _check_5xx_lectures, _check_capacity, _check_not_compatible
+    Valid, PassEvening, PassAL, PassLectures, PassTutorials, _check_5xx_lectures, _check_not_compatible
 )
 from eval.selection import fitness, probability, running_sum
 from model.initial_state import generate_initial_state
@@ -238,7 +238,7 @@ class GeneticAlgorithm:
         print(f"Hard penalty : {best_valid}")
         print(f"Soft penalty : {best_eval}")
 
-        return best_schedule, best_eval, best_valid
+        return best_schedule, best_eval, best_valid, best_fitness
     
     # Robust mutation selection 
     def choose_mutation_type(self, schedule):

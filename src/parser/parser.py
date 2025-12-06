@@ -1,6 +1,5 @@
 # Main parser module for reading and parsing the input file
 
-from .constants import SECTION_HEADERS
 from .helpers import is_empty_line
 from .event import Event, parse_lectures, parse_tutorials
 from .slot import parse_lecture_slots, parse_tutorial_slots
@@ -149,8 +148,6 @@ def parse_input_file(filepath, pen_lecturemin=1, pen_tutorialmin=1,
     # - if CPSC 413 lectures exist, CPSC 913 tut must be scheduled
     # - scheduled in tutorial slots at Tu/Th 18:00-19:00
 def handle_special_courses(problem):
-    from .event import Event
-    from .constraint import NotCompatible
     
     # check if CPSC 351 exists
     cpsc_351_lectures = problem.get_lectures_for_course("CPSC", 351)
